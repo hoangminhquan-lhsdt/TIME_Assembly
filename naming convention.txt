@@ -1,0 +1,21 @@
+QUY TẮC ĐẶT TÊN BIẾN:
+ - ngày tháng năm:
+	+ d1, m1, y1; d2, m2, y2
+ - các biến khác:
+	+ tên biến _ kiểu dữ liệu: x1_float, f_buffer
+
+QUY TẮC ĐẶT TÊN HÀM:
+ - Viết hoa chữ đầu, gạch nối giữa các từ: Doc_File, Check_Nam_Nhuan
+ 
+CHÚ THÍCH:
+ - Chức năng của hàm:
+	+ # ===== Chuc nang ham =====
+ - Viết khai hàm dưới dạng C++ để dễ hình dung:
+	+ Viết kiểu dữ liệu trả về, kiểu dữ liệu của tham số với thanh ghi tương ứng: 
+		# void Doc_FILE($a0: buffer)
+	+ Nếu có trả về:
+		# bool Check_Nam_Nhuan($a0: int year)
+		# return $v0: 1 if true, 0 if false
+ - Sau mỗi hàm có ngăn cách:
+	+ # =========================
+ - Chú thích từng bước của hàm: xem file trên github

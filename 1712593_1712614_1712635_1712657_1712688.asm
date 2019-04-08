@@ -13,16 +13,36 @@ y2: .word 0
 	.text
 	.globl main
 main:
+	la $a0, fin_buffer
+	jal Doc_File
 	
-
+	#la $a0, fin_buffer
+	#li $v0, 4
+	#syscall
+	
+	# copy fin_buffer to fout_buffer
+	la $t0, fin_buffer
+	la $t1, fout_buffer
+copy_loop:
+	lb $t6, ($t0)
+	sb $t6, ($t1)
+	addi $t0, $t0, 1
+	addi $t1, $t1, 1
+	beqz $t6, exit_loop
+	j copy_loop
+exit_loop:
+	la $a0, fout_buffer
+	jal Xuat_File
+	
+	j exit
 
 # ===== Ham doc file input =====
 #  void Doc_FILE($a0: buffer)
-Doc_FILE:
+Doc_File:
 	# push stack
-	subu $sp, $sp, 8
+	subu $sp, $sp, 4
 	sw $ra, ($sp)
-	sw $a0, 4($sp)
+	#sw $a0, 4($sp)
 	
 	# open input file
 	la $a0, fin
@@ -47,16 +67,20 @@ Doc_FILE:
 	
 	# pop stack
 	lw $ra, ($sp)
-	lw $a0, 4($a0)
-	addu $sp, $sp, 8
-# =====================================
+	#lw $a0, 4($a0)
+	addu $sp, $sp, 4
+	
+	# exit from function
+	jr $ra
+# ================================
 
-# ===== Ham xuat file output ===== 
+# ===== Ham xuat file output =====
 # void Xuat_FILE($a0: buffer)
+Xuat_File:
 	# push stack
 	subu $sp, $sp, 4
 	sw $ra, ($sp)
-	sw $a0, 4($sp)
+	#sw $a0, 4($sp)
 	
 	# open output file
 	la $a0, fout
@@ -80,8 +104,12 @@ Doc_FILE:
 	
 	# pop stack
 	lw $ra, ($sp)
-	lw $a0, 4($a0)
-	addu $sp, $sp, 8
+	#lw $a0, 4($a0)
+	addu $sp, $sp, 4
+	
+	# exit from function
+	jr $ra
+# ================================
 	
 exit:
 	li $v0, 10
