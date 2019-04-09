@@ -15,17 +15,7 @@ y2: .word 0
 	.text
 	.globl main
 main:
-	la $a0, 10
-	la $a1, 05
-	la $a2, 2015
-	la $a3, TIME_1
-	jal Date
 	
-	la $a0, TIME_1
-	li $v0, 4
-	syscall
-	
-	j exit
 
 # ===== Ham doc file input =====
 #  void Doc_FILE()
