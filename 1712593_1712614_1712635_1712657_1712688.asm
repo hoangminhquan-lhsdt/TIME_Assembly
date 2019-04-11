@@ -1,5 +1,6 @@
 	.data
-tb_input_1: .asciiz "Nhap TIME_1: "
+tb_input: .asciiz "Nhap TIME: "
+tb_input_1: .asciiz "\nNhap TIME_1: "
 tb_input_2: .asciiz "\nNhap TIME_2: "
 tb_input_ngay: .asciiz "\nNhap ngay: "
 tb_input_thang: .asciiz "\nNhap thang: "
@@ -23,8 +24,24 @@ y2: .word 0
 	.text
 	.globl main
 main:
+	#la $a0, 1
 	jal Nhap
 	
+	la $a0, newline
+	li $v0, 4
+	syscall
+	
+	lw $a0, d1
+	lw $a1, m1
+	lw $a2, y1
+	la $a3, TIME_1
+	jal Date
+	
+	la $a0, TIME_1
+	li $v0, 4
+	syscall
+	
+
 	j exit
 
 
@@ -82,14 +99,19 @@ Nhap:
 	# push stack
 	subu $sp, $sp, 20
 	sw $ra, ($sp)
-	sw $s0, 4($sp)
+	sw $a0, 4($sp)
 	sw $s1, 8($sp)
 	sw $s2, 12($sp)
 	sw $s3, 16($sp)
+	
+	move $s0, $a0
 
+	beq $s0, 7, Nhap_2
 	
 	# Nhap 1 Date
-	la $s0, ($a0)
+	la $a0, tb_input
+	li $v0, 4
+	syscall
 Nhap_1:
 	# Nhap ngay
 	la $a0, tb_input_ngay
@@ -103,7 +125,7 @@ Nhap_1:
 	
 	la $a0, input_2
 	jal KiemTra_Input
-	beqz $v0, Nhap_error
+	beqz $v0, Nhap_1_error
 	
 	# chuyen chuoi ngay da nhap thanh int
 	li $s3, 10
@@ -118,7 +140,9 @@ Nhap_1:
 	jal atoi
 	move $s2, $v0
 	add $s2, $s2, $s3
+	
 	sw $s2, d1  # luu vao d1
+	
 	
 	# Nhap thang
 	la $a0, tb_input_thang
@@ -132,7 +156,7 @@ Nhap_1:
 	
 	la $a0, input_2
 	jal KiemTra_Input
-	beqz $v0, Nhap_error
+	beqz $v0, Nhap_1_error
 	
 	# chuyen chuoi thang da nhap thanh int
 	li $s3, 10
@@ -147,7 +171,9 @@ Nhap_1:
 	jal atoi
 	move $s2, $v0
 	add $s2, $s2, $s3
+	
 	sw $s2, m1  # luu vao m1
+	
 	
 	# Nhap nam
 	la $a0, tb_input_nam
@@ -161,32 +187,48 @@ Nhap_1:
 	
 	la $a0, input_4
 	jal KiemTra_Input
-	beqz $v0, Nhap_error
+	beqz $v0, Nhap_1_error
 	
 	# chuyen chuoi nam da nhap thanh int
-	
+	li $s3, 1000
+	li $s2, 0
+	la $s1, input_4
+Nhap_nam_1_loop:
+	lb $a0, ($s1)	
+	jal atoi
+	mult $v0, $s3
+	mflo $s0
+	add $s2, $s2, $s0
+	div $s3, $s3, 10
+	addi $s1, $s1, 1
+	bnez $s3, Nhap_nam_1_loop
+	sw $s2, y1
 	
 	j Nhap_Exit
-Nhap_error:
-	subu $sp, $sp, 4
-	sw $a0, ($sp)
+	
+Nhap_1_error:
+	#subu $sp, $sp, 4
+	#sw $a0, ($sp)
 	
 	la $a0, tb_input_error
 	li $v0, 4
 	syscall
 	
-	lw $a0, ($sp)
-	addu $sp, $sp 4
+	#lw $a0, ($sp)
+	#addu $sp, $sp 4
 	j Nhap_1
 	
+	
+	# Nhap 2 Date
 Nhap_2:	
+	
 	
 Nhap_Exit:
 	# pop stack
 	lw $s3, 16($sp)
 	lw $s2, 12($sp)
 	lw $s1, 8($sp)
-	lw $s0, 4($sp)
+	lw $a0, 4($sp)
 	lw $ra, ($sp)
 	addu $sp, $sp, 20
 	
@@ -400,7 +442,7 @@ Date:
 	move $a0, $s1
 	jal itoa
 	move $s1, $v0
-	sb $s0, ($a3)
+	sb $s0, 0($a3)
 	sb $s1, 1($a3)
 	
 	# add '/'
