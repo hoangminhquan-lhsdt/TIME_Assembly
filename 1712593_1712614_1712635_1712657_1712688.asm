@@ -25,12 +25,19 @@ y2: .word 0
 	.text
 	.globl main
 main:
-	lw $a0, selection
-	jal Nhap
+	#lw $a0, selection
+	#jal Nhap
 	
-	la $a0, newline
-	li $v0, 4
-	syscall
+	#la $a0, newline
+	#li $v0, 4
+	#syscall
+	
+	li $t0, 11
+	li $t1, 4
+	li $t2, 2019
+	sw $t0, d1
+	sw $t1, m1
+	sw $t2, y1
 	
 	lw $a0, d1
 	lw $a1, m1
@@ -46,6 +53,10 @@ main:
 	li $v0, 4
 	syscall
 	
+	la $a0, TIME_1
+	li $a1, 2
+	jal Time
+	
 	lw $a0, d2
 	lw $a1, m2
 	lw $a2, y2
@@ -56,8 +67,106 @@ main:
 	li $v0, 4
 	syscall
 	
-
+	#lw $a0, d2
+	#lw $a1, m2
+	#lw $a2, y2
+	#la $a3, TIME_2
+	#jal Date
+	
+	#la $a0, TIME_2
+	#li $v0, 4
+	#syscall
+	
+	
 	j exit
+
+
+# ===== Tach DD, MM, YYYY ========
+# void Time($a0: string DD/MM/YYYY, $a1: int 1 for D1, 2 for D2)
+Time:
+	# push stack
+	subu $sp, $sp, 24
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	sw $s2, 12($sp)
+	sw $s3, 16($sp)
+	sw $t0, 20($sp)
+	
+	la $s0, ($a0)
+	
+	
+	# trich day
+	lb $a0, 0($s0)
+	jal atoi
+	mul $t0, $v0, 10	
+	
+	lb $a0, 1($s0)
+	jal atoi
+	move $t1, $v0
+	
+	add $s1, $t0, $t1  # day = $t0 + $t1
+	
+	
+	# trich month
+	lb $a0, 3($s0)
+	jal atoi
+	mul $t0, $v0, 10	
+	
+	lb $a0, 4($s0)
+	jal atoi
+	move $t1, $v0
+	
+	add $s2, $t0, $t1  # month = $t0 + $t1
+	
+	
+	# trich year
+	lb $a0, 6($s0)
+	jal atoi
+	mul $t0, $v0, 1000
+	add $s3, $0, $t0
+	
+	lb $a0, 7($s0)
+	jal atoi
+	mul $t0, $v0, 100
+	add $s3, $s3, $t0
+	
+	lb $a0, 8($s0)
+	jal atoi
+	mul $t0, $v0, 10
+	add $s3, $s3, $t0
+	
+	lb $a0, 9($s0)
+	jal atoi
+	add $s3, $s3, $v0
+	
+	
+	# luu vao dX mX yX
+	beq $a1, 2, Time_Save2
+Time_Save1:	
+	sw $s1, d1
+	sw $s2, m1
+	sw $s3, y1
+	j Time_Exit
+	
+Time_Save2:
+	sw $s1, d2
+	sw $s2, m2
+	sw $s3, y2
+
+Time_Exit:
+	# pop stack
+	sw $t0, 20($sp)
+	sw $s3, 16($sp)
+	sw $s2, 12($sp)
+	sw $s1, 8($sp)
+	sw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 24
+	
+	# ket thuc ham	
+	jr $ra
+# ================================
 
 
 # ===== Ham kiem tra input =======
@@ -101,7 +210,7 @@ KiemTra_Input_Exit:
 	lw $ra, ($sp)
 	addu $sp, $sp, 16
 	
-	# thoat ham	
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -140,10 +249,21 @@ Nhap_1:
 	# Xu ly chuoi thieu do dai
 	#la $a0, input_2
 	#lb $s1, 1($a0)
-	#bnez $s1, Nhap_1_skip  # neu du, skip
-	#li $s0, '0'
-	#lb $s1, ($a0)
-	#sb $s0, ($a0)
+	#beq $s1, '\0', Nhap_1_skip  # neu du, skip
+	# ================
+	#la $a0, newline
+	#li $v0, 4
+	#syscall
+	#li $a0, 100000
+	#li $v0, 1
+	#syscall
+	#la $a0, newline
+	#li $v0, 4
+	#syscall
+	# ================
+	#li $s0, 48
+	#lb $s1, 0($a0)
+	#sb $s0, 0($a0)
 	#sb $s1, 1($a0)
 
 #Nhap_1_skip:
@@ -356,10 +476,6 @@ Nhap_2_error:
 	j Nhap_2
 	
 	
-	
-	
-	
-	
 Nhap_Exit:
 	# pop stack
 	lw $s3, 16($sp)
@@ -369,7 +485,7 @@ Nhap_Exit:
 	lw $ra, ($sp)
 	addu $sp, $sp, 20
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -437,7 +553,7 @@ Doc_File:
 	lw $s6, 4($sp)
 	addu $sp, $sp, 8
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -484,7 +600,7 @@ Xuat_File:
 	lw $ra, ($sp)
 	addu $sp, $sp, 8
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -503,7 +619,7 @@ itoa:
 	lw $ra, ($sp)
 	addu $sp, $sp, 4
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -522,7 +638,7 @@ atoi:
 	lw $ra, ($sp)
 	addu $sp, $sp, 4
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -554,7 +670,7 @@ strlen_end:
 	lw $ra, ($sp)
 	addu $sp, $sp, 16
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
@@ -650,7 +766,7 @@ Date_i_equals_4:
 	lw $ra, ($sp)
 	addu $sp, $sp, 16
 	
-	# exit from function
+	# ket thuc ham	
 	jr $ra
 # ================================
 
