@@ -15,6 +15,7 @@ TIME_1: .space 100
 TIME_2: .space 100
 input_2: .space 3
 input_4: .space 5
+selection: .word 0
 d1: .word 0
 m1: .word 0
 y1: .word 0
@@ -24,7 +25,7 @@ y2: .word 0
 	.text
 	.globl main
 main:
-	#la $a0, 1
+	lw $a0, selection
 	jal Nhap
 	
 	la $a0, newline
@@ -41,6 +42,20 @@ main:
 	li $v0, 4
 	syscall
 	
+	la $a0, newline
+	li $v0, 4
+	syscall
+	
+	lw $a0, d2
+	lw $a1, m2
+	lw $a2, y2
+	la $a3, TIME_2
+	jal Date
+	
+	la $a0, TIME_2
+	li $v0, 4
+	syscall
+	
 
 	j exit
 
@@ -50,12 +65,11 @@ main:
 # return $v0: int 1 if valid, 0 if error
 KiemTra_Input:
 	# push stack
-	subu $sp, $sp, 20
+	subu $sp, $sp, 16
 	sw $ra, ($sp)
-	sw $s0, 4($sp)
-	sw $s1, 8($sp)
-	sw $s2, 12($sp)
-	sw $s6, 16($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s6, 12($sp)
 	
 	# lay strlen
 	jal strlen
@@ -81,12 +95,11 @@ Input_Invalid:
 
 KiemTra_Input_Exit:
 	# pop stack
-	lw $s6, 16($sp)
-	lw $s2, 12($sp)
-	lw $s1, 8($sp)
-	lw $s0, 4($sp)
+	lw $s6, 12($sp)
+	lw $s2, 8($sp)
+	lw $s1, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 20
+	addu $sp, $sp, 16
 	
 	# thoat ham	
 	jr $ra
@@ -99,16 +112,17 @@ Nhap:
 	# push stack
 	subu $sp, $sp, 20
 	sw $ra, ($sp)
-	sw $a0, 4($sp)
+	sw $s0, 4($sp)
 	sw $s1, 8($sp)
 	sw $s2, 12($sp)
 	sw $s3, 16($sp)
 	
 	move $s0, $a0
-
+	
 	beq $s0, 7, Nhap_2
 	
 	# Nhap 1 Date
+	li $s0, 0
 	la $a0, tb_input
 	li $v0, 4
 	syscall
@@ -123,6 +137,16 @@ Nhap_1:
 	li $v0, 8
 	syscall
 	
+	# Xu ly chuoi thieu do dai
+	#la $a0, input_2
+	#lb $s1, 1($a0)
+	#bnez $s1, Nhap_1_skip  # neu du, skip
+	#li $s0, '0'
+	#lb $s1, ($a0)
+	#sb $s0, ($a0)
+	#sb $s1, 1($a0)
+
+#Nhap_1_skip:
 	la $a0, input_2
 	jal KiemTra_Input
 	beqz $v0, Nhap_1_error
@@ -207,20 +231,133 @@ Nhap_nam_1_loop:
 	j Nhap_Exit
 	
 Nhap_1_error:
-	#subu $sp, $sp, 4
-	#sw $a0, ($sp)
-	
 	la $a0, tb_input_error
 	li $v0, 4
 	syscall
 	
-	#lw $a0, ($sp)
-	#addu $sp, $sp 4
 	j Nhap_1
 	
-	
+
 	# Nhap 2 Date
 Nhap_2:	
+	li $s0, 0
+	la $a0, tb_input_1
+	li $v0, 4
+	syscall
+	
+	
+	# Nhap ngay
+	la $a0, tb_input_ngay
+	li $v0, 4
+	syscall
+	
+	la $a0, input_2
+	li $a1, 3
+	li $v0, 8
+	syscall
+	
+	la $a0, input_2
+	jal KiemTra_Input
+	beqz $v0, Nhap_2_error
+	
+	# chuyen chuoi ngay da nhap thanh int
+	li $s3, 10
+	la $s1, input_2
+	lb $a0, 0($s1)
+	jal atoi
+	move $s2, $v0
+	mult $s2, $s3
+	mflo $s3
+	lb $a0, 1($s1)
+	jal atoi
+	move $s2, $v0
+	add $s2, $s2, $s3
+	
+	sw $s2, d2  # luu vao d1
+	
+	
+	# Nhap thang
+	la $a0, tb_input_thang
+	li $v0, 4
+	syscall
+	
+	la $a0, input_2
+	li $a1, 3
+	li $v0, 8
+	syscall
+	
+	la $a0, input_2
+	jal KiemTra_Input
+	beqz $v0, Nhap_2_error
+	
+	# chuyen chuoi thang da nhap thanh int
+	li $s3, 10
+	la $s1, input_2
+	lb $a0, 0($s1)
+	jal atoi
+	move $s2, $v0
+	mult $s2, $s3
+	mflo $s3
+	
+	lb $a0, 1($s1)
+	jal atoi
+	move $s2, $v0
+	add $s2, $s2, $s3
+	
+	sw $s2, m2  # luu vao m1
+	
+	
+	# Nhap nam
+	la $a0, tb_input_nam
+	li $v0, 4
+	syscall
+	
+	la $a0, input_4
+	li $a1, 5
+	li $v0, 8
+	syscall
+	
+	la $a0, input_4
+	jal KiemTra_Input
+	beqz $v0, Nhap_2_error
+	
+	# chuyen chuoi nam da nhap thanh int
+	li $s3, 1000
+	li $s2, 0
+	la $s1, input_4
+Nhap_nam_2_loop:
+	lb $a0, ($s1)	
+	jal atoi
+	mult $v0, $s3
+	mflo $s0
+	add $s2, $s2, $s0
+	div $s3, $s3, 10
+	addi $s1, $s1, 1
+	bnez $s3, Nhap_nam_2_loop
+	sw $s2, y2
+	
+	# reset gia tri thanh ghi
+	li $s0, 0
+	li $s1, 0
+	li $s2, 0
+	li $s3, 0
+	
+	la $a0, tb_input_2
+	li $v0, 4
+	syscall
+	
+	j Nhap_1
+	
+Nhap_2_error:
+	la $a0, tb_input_error
+	li $v0, 4
+	syscall
+
+	j Nhap_2
+	
+	
+	
+	
 	
 	
 Nhap_Exit:
@@ -228,7 +365,7 @@ Nhap_Exit:
 	lw $s3, 16($sp)
 	lw $s2, 12($sp)
 	lw $s1, 8($sp)
-	lw $a0, 4($sp)
+	lw $s0, 4($sp)
 	lw $ra, ($sp)
 	addu $sp, $sp, 20
 	
