@@ -13,9 +13,9 @@ newline: .asciiz "\n"
 fout_buffer: .space 1024
 TIME_1: .space 100
 TIME_2: .space 100
-input_2: .space 3
-input_4: .space 5
-selection: .word 0
+input_2: .space 4
+input_4: .space 6
+selection: .word 7
 d1: .word 0
 m1: .word 0
 y1: .word 0
@@ -25,25 +25,12 @@ y2: .word 0
 	.text
 	.globl main
 main:
-	#lw $a0, selection
-	#jal Nhap
+	lw $a0, selection
+	jal Nhap
 	
-	#la $a0, newline
-	#li $v0, 4
-	#syscall
-	
-	li $t0, 11
-	li $t1, 4
-	li $t2, 2019
-	sw $t0, d1
-	sw $t1, m1
-	sw $t2, y1
-	
-	lw $a0, d1
-	lw $a1, m1
-	lw $a2, y1
-	la $a3, TIME_1
-	jal Date
+	la $a0, newline
+	li $v0, 4
+	syscall
 	
 	la $a0, TIME_1
 	li $v0, 4
@@ -53,50 +40,30 @@ main:
 	li $v0, 4
 	syscall
 	
-	la $a0, TIME_1
-	li $a1, 2
-	jal Time
-	
-	lw $a0, d2
-	lw $a1, m2
-	lw $a2, y2
-	la $a3, TIME_2
-	jal Date
-	
 	la $a0, TIME_2
 	li $v0, 4
 	syscall
-	
-	#lw $a0, d2
-	#lw $a1, m2
-	#lw $a2, y2
-	#la $a3, TIME_2
-	#jal Date
-	
-	#la $a0, TIME_2
-	#li $v0, 4
-	#syscall
-	
+
 	
 	j exit
-
 
 # ===== Tach DD, MM, YYYY ========
 # void Time($a0: string DD/MM/YYYY, $a1: int 1 for D1, 2 for D2)
 Time:
 	# push stack
-	subu $sp, $sp, 24
+	subu $sp, $sp, 28
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
 	sw $s2, 12($sp)
 	sw $s3, 16($sp)
 	sw $t0, 20($sp)
+	sw $t1, 24($sp)
 	
 	la $s0, ($a0)
 	
 	
-	# trich day
+	# trich ngay
 	lb $a0, 0($s0)
 	jal atoi
 	mul $t0, $v0, 10	
@@ -108,7 +75,7 @@ Time:
 	add $s1, $t0, $t1  # day = $t0 + $t1
 	
 	
-	# trich month
+	# trich thang
 	lb $a0, 3($s0)
 	jal atoi
 	mul $t0, $v0, 10	
@@ -120,7 +87,7 @@ Time:
 	add $s2, $t0, $t1  # month = $t0 + $t1
 	
 	
-	# trich year
+	# trich nam
 	lb $a0, 6($s0)
 	jal atoi
 	mul $t0, $v0, 1000
@@ -156,15 +123,105 @@ Time_Save2:
 
 Time_Exit:
 	# pop stack
-	sw $t0, 20($sp)
-	sw $s3, 16($sp)
-	sw $s2, 12($sp)
-	sw $s1, 8($sp)
-	sw $s0, 4($sp)
+	lw $t1, 24($sp)
+	lw $t0, 20($sp)
+	lw $s3, 16($sp)
+	lw $s2, 12($sp)
+	lw $s1, 8($sp)
+	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 24
+	addu $sp, $sp, 28
 	
 	# ket thuc ham	
+	jr $ra
+# ================================
+
+
+# ===== Chuan hoa DD, MM =========
+# void Format_DM($a0: string)
+Format_DM:
+	# push stack
+	subu $sp, $sp, 12
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	
+	# dua ki tu sang phai, them so 0 o truoc
+	li $s0, 48
+	lb $s1, 0($a0)
+	sb $s0, 0($a0)
+	sb $s1, 1($a0)
+	sb $0, 2($a0)
+	li $s0, 0
+	
+	# pop stack
+	lw $s1, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 12
+	
+	# ket thuc ham
+	jr $ra
+# ================================
+
+
+# ===== Chuan hoa YEAR ===========
+# void Format_YR($a0: string, $a1: int strlen)
+Format_YR:
+	# push stack
+	subu $sp, $sp, 16
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	sw $t0, 12($sp)
+	#sw $t1, 16($sp)
+	
+	# push tung ki tu vao stack
+	la $s0, ($a0)
+	li $t0, 0  # i = 0
+Format_YR_push:
+	lb $s1, ($s0)
+	
+	subu $sp, $sp, 4
+	sw $s1, ($sp)
+	
+	addu $s0, $s0, 1
+	addi $t0, $t0, 1  # i = i + 1
+	bne $t0, $a1, Format_YR_push  # do while (i != strlen)
+	
+	# ghi 0 vao cac ki tu truoc
+	la $s0, ($a0)
+	li $s1, '0'
+	li $t0, 0  # i = 0
+Format_YR_fill0:
+	sb $s1, ($s0)
+	addu $s0, $s0, 1
+	addi $t0, $t0, 1
+	bne $t0, 4, Format_YR_fill0  # do while (i != 4)
+	
+	# pop tung ki tu
+	addu $s0, $a0, 3
+	li $t0, 0
+Format_YR_pop:
+	lw $s1, ($sp)
+	addu $sp, $sp, 4
+	
+	sb $s1, ($s0)
+	
+	subu $s0, $s0, 1
+	addi $t0, $t0, 1
+	bne $t0, $a1, Format_YR_pop
+	
+	
+	# pop stack
+	#lw $t1, 16($sp)
+	lw $t0, 12($sp)
+	lw $s1, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 16
+	
+	# ket thuc ham
 	jr $ra
 # ================================
 
@@ -246,27 +303,14 @@ Nhap_1:
 	li $v0, 8
 	syscall
 	
-	# Xu ly chuoi thieu do dai
-	#la $a0, input_2
-	#lb $s1, 1($a0)
-	#beq $s1, '\0', Nhap_1_skip  # neu du, skip
-	# ================
-	#la $a0, newline
-	#li $v0, 4
-	#syscall
-	#li $a0, 100000
-	#li $v0, 1
-	#syscall
-	#la $a0, newline
-	#li $v0, 4
-	#syscall
-	# ================
-	#li $s0, 48
-	#lb $s1, 0($a0)
-	#sb $s0, 0($a0)
-	#sb $s1, 1($a0)
-
-#Nhap_1_skip:
+	# Chuan hoa chuoi ngay
+	la $a0, input_2
+	jal strlen
+	beq $v0, 2, Nhap_1_day_skip
+	la $a0, input_2
+	jal Format_DM
+	
+Nhap_1_day_skip:
 	la $a0, input_2
 	jal KiemTra_Input
 	beqz $v0, Nhap_1_error
@@ -298,6 +342,14 @@ Nhap_1:
 	li $v0, 8
 	syscall
 	
+	# Chuan hoa chuoi thang
+	la $a0, input_2
+	jal strlen
+	beq $v0, 2, Nhap_1_month_skip
+	la $a0, input_2
+	jal Format_DM
+	
+Nhap_1_month_skip:
 	la $a0, input_2
 	jal KiemTra_Input
 	beqz $v0, Nhap_1_error
@@ -329,6 +381,15 @@ Nhap_1:
 	li $v0, 8
 	syscall
 	
+	# Chuan hoa chuoi nam
+	la $a0, input_4
+	jal strlen
+	beq $v0, 4, Nhap_1_year_skip
+	la $a0, input_4
+	la $a1, ($v0)
+	jal Format_YR
+	
+Nhap_1_year_skip:
 	la $a0, input_4
 	jal KiemTra_Input
 	beqz $v0, Nhap_1_error
@@ -376,6 +437,14 @@ Nhap_2:
 	li $v0, 8
 	syscall
 	
+	# Chuan hoa chuoi ngay
+	la $a0, input_2
+	jal strlen
+	beq $v0, 2, Nhap_2_day_skip
+	la $a0, input_2
+	jal Format_DM
+	
+Nhap_2_day_skip:
 	la $a0, input_2
 	jal KiemTra_Input
 	beqz $v0, Nhap_2_error
@@ -406,6 +475,14 @@ Nhap_2:
 	li $v0, 8
 	syscall
 	
+	# Chuan hoa chuoi thang
+	la $a0, input_2
+	jal strlen
+	beq $v0, 2, Nhap_2_month_skip
+	la $a0, input_2
+	jal Format_DM
+	
+Nhap_2_month_skip:
 	la $a0, input_2
 	jal KiemTra_Input
 	beqz $v0, Nhap_2_error
@@ -437,6 +514,15 @@ Nhap_2:
 	li $v0, 8
 	syscall
 	
+	# Chuan hoa chuoi nam
+	la $a0, input_4
+	jal strlen
+	beq $v0, 4, Nhap_2_year_skip
+	la $a0, input_4
+	la $a1, ($v0)
+	jal Format_YR
+	
+Nhap_2_year_skip:	
 	la $a0, input_4
 	jal KiemTra_Input
 	beqz $v0, Nhap_2_error
@@ -477,6 +563,51 @@ Nhap_2_error:
 	
 	
 Nhap_Exit:
+	# swap D1 <-> D2
+	subu $sp, $sp, 12
+	
+	lw $s0, d1
+	sw $s0, ($sp)
+	
+	lw $s0, m1
+	sw $s0, 4($sp)
+	
+	lw $s0, y1
+	sw $s0, 8($sp)
+	
+	lw $s0, y2
+	sw $s0, y1
+	
+	lw $s0, 8($sp)
+	sw $s0, y2
+	
+	lw $s0, m2
+	sw $s0, m1
+	
+	lw $s0, 4($sp)
+	sw $s0, m2
+	
+	lw $s0, d2
+	sw $s0, d1
+	
+	lw $s0, ($sp)
+	sw $s0, d2
+	
+	addu $sp, $sp, 12
+	
+	# luu d,m,y vao TIME
+	lw $a0, d1
+	lw $a1, m1
+	lw $a2, y1
+	la $a3, TIME_1
+	jal Date
+	
+	lw $a0, d2
+	lw $a1, m2
+	lw $a2, y2
+	la $a3, TIME_2
+	jal Date
+	
 	# pop stack
 	lw $s3, 16($sp)
 	lw $s2, 12($sp)
@@ -647,16 +778,22 @@ atoi:
 # return $v0: int strlen
 strlen:
 	# push stack
-	subu $sp, $sp, 16
+	subu $sp, $sp, 24
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
 	sw $s2, 12($sp)
+	sw $t0, 16($sp)
+	sw $t1, 20($sp)
+	
+	la $t0, newline
+	lb $t1, ($t0)
 	
 	la $s2, ($a0)
 strlen_loop:
 	lb $s1, ($s2)
 	beqz $s1, strlen_end  # check null
+	beq $s1, $t1, strlen_end # check newline
 	addi $s2, $s2, 1
 	addi $s0, $s0, 1  # len = len + 1
 	j strlen_loop
@@ -664,11 +801,13 @@ strlen_end:
 	move $v0, $s0
 	
 	# pop stack
+	lw $t1, 20($sp)
+	lw $t0, 16($sp)
 	lw $s2, 12($sp)
 	lw $s1, 8($sp)
 	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 16
+	addu $sp, $sp, 24
 	
 	# ket thuc ham	
 	jr $ra
