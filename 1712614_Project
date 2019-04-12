@@ -1,4 +1,10 @@
 
+
+
+
+
+
+
 .data:
 	date: .asciiz"Nhap ngay: "
 	month: .asciiz"Nhap thang: "
@@ -21,10 +27,14 @@
 	m12: .asciiz "December"
 	Month_Name: .word m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12
 	Temp2: .space 2
+	TempYear: .space 4
+	text1: .asciiz "\nNam nhuan 1: "
+	text2: .asciiz"\nNam nhuan 2: "
 .text:
 	#Call function
 	la $a0,TIME_1
 	la $a1,Arr_Of_Date
+	la $a3,Type
 	jal Input_And_Check_Function
 	#Print TIME_1
 	la $a0,TIME_1
@@ -34,7 +44,7 @@
 	li $v0,11
 	la $a0,'\n'
 	syscall
-	
+	#Print time after convert
 	la $a0,TIME_1
 	la $a1, 'B'
 	la $a2,Month_Name
@@ -43,7 +53,24 @@
 	la $a0,Type
 	li $v0,4
 	syscall
-
+	#xuat 2 nam nhuan gan nhat
+	la $a0, TIME_1
+	jal Find_Leap
+	move $t1,$v0
+	move $t2,$v1
+	li $v0,4
+	la $a0,text1
+	syscall
+	li $v0,1
+	move $a0,$t1
+	syscall
+	li $v0,4
+	la $a0,text2
+	syscall
+	li $v0,1
+	move $a0,$t2
+	syscall
+	#end of text
 	li $v0,10
 	syscall
 	
@@ -246,8 +273,7 @@ Exit:
 	jr $ra 
 #===========================================
 	#=====	Ham Input ngay thang nam, check hop le va xuat chuoi	=====
-# char* Input_And_Check_Function( $a0: char, $a1: Arr_Of_Date)
-#return char* as ddmmyyyy
+# void Input_And_Check_Function( $a0: char, $a1: Arr_Of_Date)
 Input_And_Check_Function:
 	#push stack
 	subu $sp,$sp,28
@@ -538,5 +564,113 @@ Exit_Find:
 	addu $sp,$sp,8
 	jr $ra
 #======================
+
+#====== Ham tim nam nhuan gan nhat nam duoc chon ======
+#int Find_Leap($a0:char)
+#return $v0: Year1 < Selected Year, $v1: Year2 > Selected Year
+Find_Leap:
+	subu $sp,$sp,16
+	sw $ra,($sp)	
+	sw $a0,4($sp)
+	sw $t1,8($sp)
+	sw $t2,12($sp)
 	
-	
+	la $a1,TempYear
+	jal Convert_Year_Int
+	move $a0,$v0
+	sw $a0,4($sp)
+	#Run For Year 1
+	li $t1,1
+Loop:
+	subi $a0,$a0,1
+	ble $a0,0,Left_Out
+	jal LeapYear
+	beq $v0,1,Loop2
+	j Loop
+Loop2:
+	move $t2,$a0
+	lw $a0,4($sp)
+	li $t1,1
+Loop2_1:
+	addi $a0,$a0,1
+	jal LeapYear
+	beq $v0,1,ExitLeap
+	j Loop2_1
+Left_Out:
+	li $v0,-1
+	j Loop2
+ExitLeap:
+	move $v1,$t2
+	move $v0,$a0
+	lw $ra,($sp)	
+	lw $a0,4($sp)
+	lw $t1,8($sp)
+	lw $t2,12($sp)
+	addu $sp,$sp,16
+	jr $ra
+#==============================================
+
+#====== Ham Lay chuoi date tra ve int year ======
+#int Convert_Year_Int( $a0: string date,$a1: TempYear)
+#return vo as int
+Convert_Year_Int:
+	subu $sp,$sp,16
+	sw $ra,($sp)
+	sw $a1,4($sp)
+	sw $t1,8($sp)
+	sw $t2,12($sp)
+	#copy yyyy to TempYear
+	addi $a0,$a0,6
+	li $t1,0	
+Loop_Int:
+	bge $t1,4,Con
+	lb $t2,($a0)
+	sb $t2,($a1)
+	addi $a0,$a0,1
+	addi $a1,$a1,1
+	addi $t1,$t1,1
+	j Loop_Int
+Con:	#Convert char yyyy to int yyyy
+	lw $a1,4($sp)
+	#phan tu dau x1000
+	lb $t1,($a1)
+	subi $t1,$t1,'0'
+	li $t2,1000
+	mult $t1,$t2
+	mflo $t1
+	sw $t1,8($sp)
+	addi $a1,$a1,1
+	#phan tu 2 nhan 100
+	lb $t2,($a1)
+	subi $t2,$t2,'0'
+	li $t1,100
+	mult $t1,$t2
+	mflo $t2
+	lw $t1,8($sp)
+	add $t1,$t1,$t2
+	sw $t1,8($sp)
+	addi $a1,$a1,1
+	#phan tu 3 nhan 10
+	lb $t1,($a1)
+	subi $t1,$t1,'0'
+	li $t2,10
+	mult $t1,$t2
+	mflo $t2
+	lw $t1,8($sp)
+	add $t1,$t1,$t2
+	sw $t1,8($sp)
+	addi $a1,$a1,1
+	#phan tu 4 cong vao stack 8($sp)
+	lb $t2,($a1)
+	subi $t2,$t2,'0'
+	lw $t1,8($sp)
+	add $t1,$t1,$t2
+	#pop stack
+	move $v0,$t1
+	lw $ra,($sp)
+	lw $a1,4($sp)
+	lw $t1,8($sp)
+	lw $t2,12($sp)
+	addu $sp,$sp,16
+	jr $ra
+#=======================================
