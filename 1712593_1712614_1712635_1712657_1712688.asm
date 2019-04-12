@@ -705,31 +705,18 @@ Doc_File:
 	sw $ra, ($sp)
 	sw $s6, 4($sp)
 	
-	# open input file
-	la $a0, fin
-	li $a1, 0
-	li $a2, 0
-	li $v0, 13
-	syscall
-	move $s6, $v0
+	jal Distance2day
+	move $a0,$v0
 	
-	# read opened input file
-	move $a0, $s6
-	la $a1, fin_buffer
-	li $a2, 1024
-	li $v0, 14
+	li $v0,1
 	syscall
 	move $s0, $v0  # input length
 	
-	# close input file
-	move $a0, $s6
-	li $v0, 16
-	syscall
+	addi $v0, $a0, '0'
 	
 	# pop stack
 	lw $ra, ($sp)
-	lw $s6, 4($sp)
-	addu $sp, $sp, 8
+	addu $sp, $sp, 4
 	
 	# ket thuc ham	
 	jr $ra
@@ -740,9 +727,8 @@ Doc_File:
 # void Xuat_FILE()
 Xuat_File:
 	# push stack
-	subu $sp, $sp, 8
+	subu $sp, $sp, 4
 	sw $ra, ($sp)
-	sw $s6, 4($sp)
 	
 	# add '\0'
 	la $a0, fout_buffer
@@ -774,9 +760,8 @@ Xuat_File:
 	syscall
 	
 	# pop stack
-	lw $s6, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 8
+	addu $sp, $sp, 4
 	
 	# ket thuc ham	
 	jr $ra
@@ -1127,14 +1112,20 @@ LeapYear_Exit:
 # return $v0: char
 itoa:
 	# push stack
-	subu $sp, $sp, 4
+	subu $sp, $sp, 16
 	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	sw $s2, 12($sp)
 	
 	addi $v0, $a0, '0'
 	
 	# pop stack
+	lw $s2, 12($sp)
+	lw $s1, 8($sp)
+	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 4
+	addu $sp, $sp, 16
 	
 	# ket thuc ham	
 	jr $ra
@@ -1295,34 +1286,62 @@ Date_i_equals_4:
 	# ket thuc ham	
 	jr $ra
 # ================================
-
-
-#======== Ham Convert Char To Int=== Mac dinh 2 chu so
-#int atoi ($a0: char a)
-#return int v0
-atoi:
-	#push stack
-	subu $sp,$sp,8
+# Khoang cach giua 2 ngay TIME_1 va TIME_2
+# int Distance2day($a0: str TIME_1,$a1 str TIME_2
+Distance2day:
+	# Push Stack
+	subu $sp,$sp,28
 	sw $ra,($sp)
-	sw $t1,4($sp)
-	# convert 
-	lb $t1,($a0)
-	subi $t1,$t1,'0'
-	li $v0,10
-	mult $t1,$v0
-	mflo $t1
+	sw $a0,4($sp)
+	sw $a1,8($sp)
+	sw $s0, 12($sp)
+	sw $s1, 16($sp)
+	sw $t0, 20($sp)
+	sw $t1, 24($sp)
+	# Load TIME_1 and TIME_2
+	la $t0,($a0)
+	la $t1,($a1)
+	# TIME_1 => d1,m1,y1
+	li,$a1,1
+	jal Time
+	# TIME_2 => d2,m2,y2
+	la $a0,($t1)
+	li $a1,2
+	jal Time
 
-	addi $a0,$a0,1
-	lb $v0,($a0)
-	subi $v0,$v0,'0'
-	add $v0,$v0,$t1
-	#pop stack
+	lw $a0,d1
+	lw $a1,m1
+	lw $a2,y1
+	# Day from 1/1/1 to TIME 1
+	jal DayFrom1
+	move $s0,$v0
+
+	lw $a0,d2
+	lw $a1,m2
+	lw $a2,y2
+	# Day from 1/1/1 to TIME 2
+	jal DayFrom1
+	move $s1,$v0
+	# Distance from Time_1 to Time_2
+	sub $t0,$s0,$s1
+	bltz $t0,Distance2day_Am # Minus
+	j Distance2day_Exit
+Distance2day_Am:
+	sub $t0,$0,$t0
+	j Distance2day_Exit
+Distance2day_Exit:
+	move $v0,$t0
+	# Pop Stack
 	lw $ra,($sp)
-	lw $t1,4($sp)
-
-	addu $sp,$sp,8
+	lw $a0,4($sp)
+	lw $a1,8($sp)
+	lw $s0, 12($sp)
+	lw $s1, 16($sp)
+	lw $t0, 20($sp)
+	lw $t1, 24($sp)
+	addu $sp,$sp,28
 	jr $ra
-#======================
+# ========================================================
 
 
 #int find length($a0: char)
@@ -1456,6 +1475,79 @@ Con:	#Convert char yyyy to int yyyy
 #=======================================
 
 
-exit:
-	li $v0, 10
+
+# ===== ham Ngay thu may ke tu ngay 1/1/1 ( 1/1/1 la ngay thu 1) =====
+# int DayFrom1($a0: int Day, $a1: int Month, $a2: int Year)
+DayFrom1:
+	# Push Stack
+	subu $sp,$sp,28
+	sw $ra,($sp)
+	sw $a0,4($sp)
+	sw $a1,8($sp)
+	sw $a2,12($sp)
+	sw $s0,16($sp)
+	sw $s1,20($sp)
+	sw $t0,24($sp)
+	#Kiem tra dieu kien
+	li $t0,3
+	sub $t0,$a2,$t0
+	bltz $t0,XuLiDK
+	j XuLi
+
+
+XuLiDK:
+	sub $a2,$a2,1
+	add $a1,$a1,12
+	j XuLi
+XuLi:
+	#+365 * year
+	li $s0,0
+	li $t0,365
+	mult $t0,$a2
+	mflo $t0
+	add $s0,$s0,$t0
+	#+year/4
+	li $t0,4
+	div $a2,$t0
+	mflo $t0
+	add $s0,$s0,$t0
+	#-year/100
+	li $t0,100
+	div $a2,$t0
+	mflo $t0
+	sub $s0,$s0,$t0
+	#+year/400
+	li $t0,400
+	div $a2,$t0
+	mflo $t0
+	add $s0,$s0,$t0
+	#+ (153 * month - 457)
+	li $t0,153
+	mult $t0,$a1
+	mflo $s1
+	li $t0,457
+	sub $s1,$s1,$t0
+	li $t0,5
+	div $s1,$t0
+	mflo $t0
+	add $s0,$s0,$t0
+	#+day-306
+	add $s0,$s0,$a0
+	li $t0,306
+	sub $s0,$s0,306
+	# return ket qua
+	move $v0,$s0
+	# popstack	
+	lw $ra,($sp)
+	lw $a0,4($sp)
+	lw $a1,8($sp)
+	lw $a2,12($sp)
+	lw $s0,16($sp)
+	lw $s1,20($sp)
+	lw $t0,24($sp)
+	addu $sp,$sp,28
+	jr $ra
+#==========================
+end:
+	li $v0,10
 	syscall
