@@ -41,6 +41,34 @@ mon10: .asciiz "October"
 mon11: .asciiz "November"
 mon12: .asciiz "December"
 
+## Khoi tao mang Can
+Can1: .asciiz "Giap"
+Can2: .asciiz "At"
+Can3: .asciiz "Binh"
+Can4: .asciiz "Dinh"
+Can5: .asciiz "Mau"
+Can6: .asciiz "Ky"
+Can7: .asciiz "Canh"
+Can8: .asciiz "Tan"
+Can9: .asciiz "Nham"
+Can10: .asciiz "Quy"
+## Khoi tao mang Chi
+Chi1: .asciiz "Ty"
+Chi2: .asciiz "Suu"
+Chi3: .asciiz "Dan"
+Chi4: .asciiz "Meo"
+Chi5: .asciiz "Thin"
+Chi6: .asciiz "Ty"
+Chi7: .asciiz "Ngo"
+Chi8: .asciiz "Mao"
+Chi9: .asciiz "Than"
+Chi10: .asciiz "Dau"
+Chi11: .asciiz "Tuat"
+Chi12: .asciiz "Hoi"
+## Khoi tao mang chuoi
+Can: .word Can1,Can2,Can3,Can4,Can5,Can6,Can7,Can8,Can9,Can10
+Chi: .word Chi1,Chi2,Chi3,Chi4,Chi5,Chi6,Chi7,Chi8,Chi9,Chi10,Chi11,Chi12
+
 weeksday: # bang tra thu trong tuan
 		.asciiz "Sun"
 		.asciiz "Mon"
@@ -1637,6 +1665,76 @@ endWeekDay:
 	addu $sp,$sp,16
 	jr $ra
 #==============================
+
+
+#=========== Ham tinh CanChi cua nam ===========
+#=========== void CanChi($a0: int Year) ========
+CanChi:
+	# push stack
+	subu	$sp,$sp,20
+	sw	$ra,($sp)
+	sw	$t0,($sp)
+	sw	$t1,($sp)
+	sw	$s0,($sp)
+	sw	$s1,($sp)
+	
+	# Gan gia tri
+	addi 	$s0,$a0,0		# Gan gia tri nam hien tai vao thanh ghi $s0 de tinh toan Can
+	addi	$s1,$a0,0		# Gan gia tri nam hien tai vao thanh ghi $s0 de tinh toan Chi
+
+	# Tinh Can
+	addi	$t0,$zero,10
+	addi	$s0,$s0,6
+	div	$s0,$t0
+	mfhi	$s0		# Ap dung cong thuc (nam+6)%10 de tinh vi tr� trong mang Can v� gan ket qua vao lai $s0
+
+	# Tinh Chi
+	addi	$t1,$zero,12
+	add	$s1,$s1,8
+	div	$s1,$t1
+	mfhi	$s1		#Ap dung c�ng thuc (nam+8)%12 de t�nh vi tr� trong mang Chi v� luu ket qua v�o lai $s1
+	
+	# T�nh so byte can tang th�m de in phan tu trong mang Can v� Chi
+	addi	$t0,$zero,4	#Tao bien chua gia tri 4 va thuc hien nh�n
+		
+	mult	$s0,$t0		
+	mflo	$s0		#T�nh to�n so byte can tang trong mang Can	
+	
+	mult	$s1,$t0
+	mflo	$s1		#T�nh to�n so byte can tang trong mang Chi	
+	
+	# Xuat ra CanChi cua nam
+	la	$t0,0($s0)	#Truyen so byte can tang cua mang Can va Chi vao 2 thanh ghi $t0,$t1
+	la	$t1,0($s1)
+	
+	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Can cua nam
+	la	$s0,Can
+	addu	$s0,$s0,$t0	
+	li	$v0,4
+	lw	$a0,0($s0)
+	syscall
+	
+	# Xuat ra dau cach
+	la	$a0,_space
+	li	$v0,4
+	syscall
+	
+	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Chi cua nam
+	la	$s0,Chi
+	addu	$s0,$s0,$t1	
+	li	$v0,4
+	lw	$a0,0($s0)
+	syscall
+	
+	# pop stack
+	lw $ra,($sp)
+	lw $t0,4($sp)
+	lw $t1,8($sp)
+	lw $s0,12($sp)
+	lw $s1,16($sp)
+	addu $sp,$sp,20
+	jr      $ra
+# =======================
 exit:
 	li $v0, 10
 	syscall
