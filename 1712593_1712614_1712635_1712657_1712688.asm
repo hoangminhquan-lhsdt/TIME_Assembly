@@ -40,6 +40,16 @@ mon9: .asciiz "September"
 mon10: .asciiz "October"
 mon11: .asciiz "November"
 mon12: .asciiz "December"
+
+weeksday: # bang tra thu trong tuan
+		.asciiz "Sun"
+		.asciiz "Mon"
+		.asciiz "Tues"
+	 	.asciiz "Wed"
+	 	.asciiz "Thus"
+	 	.asciiz "Fri"
+		.asciiz "Sat"
+
 Month_Name: .word mon1,mon2,mon3,mon4,mon5,mon6,mon7,mon8,mon9,mon10,mon11,mon12
 Temp2: .space 2
 TempYear: .space 4
@@ -1550,4 +1560,83 @@ XuLi:
 #==========================
 end:
 	li $v0,10
+#==================ham tinh thu trong tuan===========================
+   # char * WeekDay($a0: ngay, $a1: thang, $a2: nam) : store address of the day into reg $v0 and return it
+# dau thu tuc
+WeekDay:
+	#khai bao stack
+	subi $sp,$sp,16
+	#backup thanh ghi
+	sw $ra,($sp)
+	sw $t0,4($sp)
+	sw $t1,8($sp)
+	sw $s0,12($sp) # bien luu ket qua
+	
+#than thu tuc
+	li $t0,3
+	bge $a1,$t0,start_cal #thang>=3
+	addi $a1,$a1,12
+	subi $a2,$a2,1
+	
+start_cal:
+	# 365*year + year/4 - year/100 + year/400 + day + (153*month+8)/5
+	move $s0,$a0	#s0 = day
+	
+	li $t0,365
+	mult $a2,$t0
+	mflo $t0		
+	add $s0,$s0,$t0	#s0 = 365*year + day
+	
+	li $t0,4
+	div $a2,$t0
+	mflo $t0		
+	add $s0,$s0,$t0	#s0 = 365*year + year/4 + day
+	
+	li $t0,-100
+	div $a2,$t0
+	mflo $t0		
+	add $s0,$s0,$t0	#s0 = 365*year + year/4 -yaer/100 + day
+	
+	li $t0,400
+	div $a2,$t0
+	mflo $t0		
+	add $s0,$s0,$t0	#s0 = 365*year + year/4 -yaer/100 + year/400 + day
+	
+	li $t0,153
+	mult $a1,$t0
+	mflo $t0	#153*month
+	
+	li $t1,8
+	add $t0,$t1,$t0	# $t0 = 153*month + 8
+	
+	li $t1,5
+	div $t0,$t1
+	mflo $t0	# $t0 = (153*month + 8) / 5
+	add $s0,$s0,$t0	#s0 = 365*year + year/4 -yaer/100 + year/400 + day + (153*month + 8) / 5
+	
+	li $t0,7
+	div $s0,$t0
+	mfhi $s0	# s0= s0 mod 7
+	
+	li $t0,0
+	la $t1,weeksday
+correspondedDay:
+	bne $t0,$s0,tangAddr
+	move $v0,$t1
+	j endWeekDay
+tangAddr:
+	addi $t0,$t0,1
+	addi $t1,$t1,4
+	j correspondedDay
+endWeekDay:
+	#tra thanh ghi
+	lw $ra,($sp)
+	lw $t0,4($sp)
+	lw $t1,8($sp)
+	lw $s0,12($sp)
+	addu $sp,$sp,16
+	jr $ra
+#==============================
+exit:
+	li $v0, 10
 	syscall
