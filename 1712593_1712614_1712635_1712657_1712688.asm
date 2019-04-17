@@ -1,20 +1,22 @@
 	.data
-tb_input: .asciiz "Nhap TIME: "
-tb_input_1: .asciiz "\nNhap TIME_1: "
-tb_input_2: .asciiz "\nNhap TIME_2: "
-tb_input_ngay: .asciiz "\nNhap ngay: "
-tb_input_thang: .asciiz "\nNhap thang: "
-tb_input_nam: .asciiz "\nNhap nam: "
-tb_input_error: .asciiz "\nDu lieu nhap vao khong hop le, moi nhap lai.\n"
+tb_input: .asciiz "Nhap TIME:\n"
+tb_input_1: .asciiz "Nhap TIME_1:\n"
+tb_input_2: .asciiz "\nNhap TIME_2:\n"
+tb_input_ngay: .asciiz "Nhap ngay: "
+tb_input_thang: .asciiz "Nhap thang: "
+tb_input_nam: .asciiz "Nhap nam: "
+tb_input_error: .asciiz "Du lieu nhap vao khong hop le, moi nhap lai:\n"
 fin: .asciiz "./input.txt"
 fin_buffer: .space 1024
 fout: .asciiz "./output.txt"
+fout_buffer: .space 4096
 newline: .asciiz "\n"
-fout_buffer: .space 1024
+_space: .asciiz " "
 TIME_1: .space 100
 TIME_2: .space 100
-input_2: .space 4
-input_4: .space 6
+input_2: .space 5
+input_4: .space 7
+buffer_1024: .space 1024
 selection: .word 7
 d1: .word 0
 m1: .word 0
@@ -25,9 +27,11 @@ y2: .word 0
 date: .asciiz"Nhap ngay: "
 month: .asciiz"Nhap thang: "
 year: .asciiz"Nhap nam: "
-reinput: .asciiz"nhap sai dinh dang, moi nhap lai\n"
-Arr_Of_Date: .word 31,28,31,30,31,30,31,31,30,31,30,31 
-Type: .space 20
+reinput: .asciiz"Nhap sai dinh dang, moi nhap lai\n"
+Arr_Of_Date: .word 31,28,31,30,31,30,31,31,30,31,30,31
+Month_Name_Len: .word 7,8,5,5,3,4,4,6,9,7,8,8
+Month_Name: .word mon1,mon2,mon3,mon4,mon5,mon6,mon7,mon8,mon9,mon10,mon11,mon12
+Type: .space 200
 mon1: .asciiz "January"	
 mon2: .asciiz "February"	
 mon3: .asciiz "March"	
@@ -70,67 +74,533 @@ Can: .word Can1,Can2,Can3,Can4,Can5,Can6,Can7,Can8,Can9,Can10
 Chi: .word Chi1,Chi2,Chi3,Chi4,Chi5,Chi6,Chi7,Chi8,Chi9,Chi10,Chi11,Chi12
 
 weeksday: # bang tra thu trong tuan
-		.asciiz "Sun"
-		.asciiz "Mon"
-		.asciiz "Tues"
-	 	.asciiz "Wed"
-	 	.asciiz "Thus"
-	 	.asciiz "Fri"
-		.asciiz "Sat"
-
-Month_Name: .word mon1,mon2,mon3,mon4,mon5,mon6,mon7,mon8,mon9,mon10,mon11,mon12
+		.asciiz "Chu Nhat"
+		.asciiz "Thu Hai"
+		.asciiz "Thu Ba"
+	 	.asciiz "Thu Tu"
+	 	.asciiz "Thu Nam"
+	 	.asciiz "Thu Sau"
+		.asciiz "Thu Bay"
 Temp2: .space 2
 TempYear: .space 4
 text1: .asciiz "\nNam nhuan 1: "
 text2: .asciiz"\nNam nhuan 2: "
+
+
+# Menu
+menu_array: .word menu_0,menu_1,menu_2,menu_2_1,menu_2_2,menu_2_3,menu_3,menu_4,menu_5,menu_6,menu_7,menu_8,menu_9
+menu_0: .asciiz "Ban hay chon 1 trong cac thao tac duoi day:\n"
+menu_1: .asciiz "\t1.Xuat chuoi TIME theo dinh dang DD/MM/YYYY\n"
+menu_2: .asciiz "\t2.Chuyen doi chuoi TIME thanh mot trong cac dinh dang sau:\n"
+menu_2_prompt: .asciiz "Ban hay chon dinh dang muon chuyen doi: "
+menu_2_1: .asciiz "\t\tA.MM/DD/YYYY\n"
+menu_2_2: .asciiz "\t\tB.Month DD, YYYY\n"
+menu_2_3: .asciiz "\t\tC.DD Month, YYYY\n"
+menu_3: .asciiz "\t3.Kiem tra nam trong chuoi TIME co phai nam nhuan khong\n"
+menu_3_t: .asciiz " la nam nhuan"
+menu_3_f: .asciiz " la nam thuong"
+menu_4: .asciiz "\t4.Cho biet ngay vua nhap la ngay thu may trong tuan\n"
+menu_4_1: .asciiz " la "
+menu_5: .asciiz "\t5.Cho biet ngay vua nhap la ngay thu may ke tu ngay 1/1/1\n"
+menu_5_1: .asciiz "Khoang cach tu ngay 01/01/0001 den ngay "
+menu_5_2: .asciiz " ngay"
+menu_6: .asciiz "\t6.Cho biet can chi cua nam vua nhap\n"
+menu_6_1: .asciiz " la nam "
+menu_7: .asciiz "\t7.Cho biet khoang thoi gian giua chuoi TIME_1 va TIME_2\n"
+menu_7_1: .asciiz "Khoang cach tu ngay "
+menu_7_2: .asciiz " den ngay "
+menu_7_3: .asciiz " la "
+menu_7_4: .asciiz " ngay."
+menu_8: .asciiz "\t8.Cho biet 2 nam nhuan gan nhat voi nam trong chuoi TIME\n"
+menu_8_1: .asciiz "Hai nam nhuan gan voi "
+menu_8_2: .asciiz " nhat la "
+menu_8_3: .asciiz " va "
+menu_9: .asciiz "\t9.Nhap input tu file input.txt va xuat ket qua toan bo cac chuc nang tren ra file output.txt\n"
+menu_9_1: .asciiz "1. "
+menu_9_2A: .asciiz "2A. "
+menu_9_2B: .asciiz "2B. "
+menu_9_2C: .asciiz "2C. "
+menu_9_3: .asciiz "3. "
+menu_9_4: .asciiz "4. "
+menu_9_5: .asciiz "5. "
+menu_9_6: .asciiz "6. "
+menu_9_7: .asciiz "7. "
+menu_9_8: .asciiz "8. "
+menu_prompt: .asciiz "Nhap lua chon cua ban: "
+menu_result: .asciiz "Ket qua: "
+
+
 	.text
 	.globl main
 main:	
-	#Call function
-	la $a0,TIME_1
-	la $a1,Arr_Of_Date
-	la $a3,Type
-	jal Input_And_Check_Function
-	#Print TIME_1
-	la $a0,TIME_1
-	li $v0,4
-	syscall
-	
-	li $v0,11
-	la $a0,'\n'
-	syscall
-	#Print time after convert
-	la $a0,TIME_1
-	la $a1, 'B'
-	la $a2,Month_Name
-	jal Convert
-	
-	la $a0,Type
-	li $v0,4
-	syscall
-	#xuat 2 nam nhuan gan nhat
-	la $a0, TIME_1
-	jal Find_Leap
-	move $t1,$v0
-	move $t2,$v1
-	li $v0,4
-	la $a0,text1
-	syscall
-	li $v0,1
-	move $a0,$t1
-	syscall
-	li $v0,4
-	la $a0,text2
-	syscall
-	li $v0,1
-	move $a0,$t2
-	syscall
-	#end of text
-	li $v0,10
-	syscall
-
+	jal Menu
 	
 	j exit
+	
+	
+# ===== Menu =====================
+# void Menu()
+Menu:
+	# push stack
+	subu $sp, $sp, 12
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $t0, 8($sp)
+	
+	
+	# in menu
+	la $s0, menu_array
+	li $t0, 0
+Menu_Loop:
+	lw $a0, ($s0)
+	li $v0, 4
+	syscall
+	addu $s0, $s0, 4
+	addi $t0, $t0, 1
+	bne $t0, 13, Menu_Loop
+	
+	
+	# lua chon
+	la $a0, menu_prompt
+	li $v0, 4
+	syscall
+
+	li $v0, 5
+	syscall
+	sw $v0, selection
+	
+	lw $a0, selection
+	jal Nhap
+	
+	# xu ly yeu cau
+	lw $s0, selection
+	
+	
+	beq $s0, 1, Menu_1
+	beq $s0, 2, Menu_2
+	beq $s0, 3, Menu_3
+	beq $s0, 4, Menu_4
+	beq $s0, 5, Menu_5
+	beq $s0, 6, Menu_6
+	beq $s0, 7, Menu_7
+	beq $s0, 8, Menu_8
+	beq $s0, 9, Menu_9
+Menu_1:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	la $a0, TIME_1
+	li $v0, 4
+	syscall
+	j Menu_Exit
+	
+	
+Menu_2:
+	la $a0, menu_2_prompt
+	li $v0, 4
+	syscall
+	
+	li $v0, 12
+	syscall
+	
+	la $a0, TIME_1
+	move $a1, $v0
+	jal Convert
+	
+	la $a0, newline
+	li $v0, 4
+	syscall
+	
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	la $a0, Type
+	li $v0, 4
+	syscall
+	j Menu_Exit
+	
+	
+Menu_3:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	lw $a0, y1
+	jal LeapYear
+	beqz $v0, Menu_3_F
+Menu_3_T:	
+	lw $a0, y1
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_3_t
+	li $v0, 4
+	syscall
+	
+	j Menu_Exit
+Menu_3_F:
+	lw $a0, y1
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_3_f
+	li $v0, 4
+	syscall
+	
+	j Menu_Exit
+	
+	
+Menu_4:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	lw $a0, d1
+	lw $a1, m1
+	lw $a2, y1
+	jal WeekDay
+	
+	move $s0, $v0
+	
+	la $a0, TIME_1
+	li $v0, 4
+	syscall
+	
+	la $a0, menu_4_1
+	syscall
+	
+	la $a0, ($s0)
+	li $v0, 4
+	syscall
+	j Menu_Exit
+	
+	
+Menu_5:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	la $a0, menu_4_1
+	li $v0, 4
+	syscall
+	
+	la $a0, TIME_1
+	syscall
+	
+	la $a0, menu_5_1
+	syscall
+	
+	lw $a0, d1
+	lw $a1, m1
+	lw $a2, y1
+	jal DayFrom1
+	
+	move $a0, $v0
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_5_2
+	li $v0, 4
+	syscall
+	j Menu_Exit
+	
+	
+Menu_6:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	lw $a0, y1
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_6_1
+	li $v0, 4
+	syscall
+	
+	lw $a0, y1
+	li $v0, 0
+	jal CanChi
+	
+	j Menu_Exit
+	
+	
+Menu_7:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	la $a0, menu_7_1
+	li $v0, 4
+	syscall
+	
+	la $a0, TIME_1
+	syscall
+	
+	la $a0, menu_7_2
+	syscall
+	
+	la $a0, TIME_2
+	syscall
+	
+	la $a0, menu_7_3
+	syscall
+	
+	la $a0, TIME_1
+	la $a1, TIME_2
+	jal Distance2day
+	
+	move $a0, $v0
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_7_4
+	li $v0, 4
+	syscall
+	
+	j Menu_Exit
+
+
+Menu_8:
+	la $a0, menu_result
+	li $v0, 4
+	syscall
+	
+	la $a0, menu_8_1
+	li $v0, 4
+	syscall
+	
+	lw $a0, y1
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_8_2
+	li $v0, 4
+	syscall
+	
+	la $a0, TIME_1
+	jal Find_Leap
+	move $a0, $v1
+	li $v0, 1
+	syscall
+	
+	la $a0, menu_8_3
+	li $v0, 4
+	syscall
+	
+	move $a0, $v0
+	li $v0, 1
+	syscall
+	
+	j Menu_Exit
+	
+	
+Menu_9:
+	# cau 1
+	la $a0, menu_9_1
+	jal Ghi_Fout
+	la $a0, TIME_1
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	# cau 2
+	la $a0, menu_9_2A
+	jal Ghi_Fout
+	la $a0, TIME_1
+	li $a1, 'A'
+	jal Convert
+	la $a0, Type
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	la $a0, menu_9_2B
+	jal Ghi_Fout
+	la $a0, TIME_1
+	li $a1, 'B'
+	jal Convert
+	la $a0, Type
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	la $a0, menu_9_2C
+	jal Ghi_Fout
+	la $a0, TIME_1
+	li $a1, 'C'
+	jal Convert
+	la $a0, Type
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	# cau 3
+	la $a0, menu_9_3
+	jal Ghi_Fout
+	
+	lw $a0, y1
+	jal itos
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	
+	lw $a0, y1
+	jal LeapYear
+	beqz $v0, Menu_9_3_F
+Menu_9_3_T:
+	la $a0, menu_3_t
+	jal Ghi_Fout
+	j Menu_9_3_Continue
+
+Menu_9_3_F:
+	la $a0, menu_3_f
+	jal Ghi_Fout
+
+Menu_9_3_Continue:
+	la $a0, newline
+	jal Ghi_Fout
+
+
+	# cau 4
+	la $a0, menu_9_4
+	jal Ghi_Fout
+	la $a0, TIME_1
+	jal Ghi_Fout
+	
+	lw $a0, d1
+	lw $a1, m1
+	lw $a2, y1
+	jal WeekDay
+	
+	move $s0, $v0
+	
+	la $a0, menu_4_1
+	jal Ghi_Fout
+	la $a0, ($s0)
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	# cau 5
+	la $a0, menu_9_5
+	jal Ghi_Fout
+	la $a0, menu_5_1
+	jal Ghi_Fout
+	la $a0, TIME_1
+	jal Ghi_Fout
+	la $a0, menu_4_1
+	jal Ghi_Fout
+	
+	lw $a0, d1
+	lw $a1, m1
+	lw $a2, y1
+	jal DayFrom1
+	
+	move $a0, $v0
+	jal itos
+	
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	la $a0, menu_5_2
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	# cau 6
+	la $a0, menu_9_6
+	jal Ghi_Fout
+	lw $a0, y1
+	jal itos
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	la $a0, menu_6_1
+	jal Ghi_Fout
+	# ham CanChi phai xuat dia chi
+	# de ghi vao buffer
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	# cau 7
+	la $a0, menu_9_7
+	jal Ghi_Fout
+	la $a0, menu_7_1
+	jal Ghi_Fout
+	la $a0, TIME_1
+	jal Ghi_Fout
+	la $a0, menu_7_2
+	jal Ghi_Fout
+	la $a0, TIME_2
+	jal Ghi_Fout
+	la $a0, menu_7_3
+	jal Ghi_Fout
+	
+	la $a0, TIME_1
+	la $a1, TIME_2
+	jal Distance2day
+	move $a0, $v0
+	jal itos
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	la $a0, _space
+	jal Ghi_Fout
+	la $a0, menu_7_4
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	# cau 8
+	la $a0, menu_9_8
+	jal Ghi_Fout
+	la $a0, menu_8_1
+	jal Ghi_Fout
+	lw $a0, y1
+	jal itos
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	la $a0, menu_8_2
+	jal Ghi_Fout
+	
+	la $a0, TIME_1
+	jal Find_Leap
+	move $t0, $v0
+	move $a0, $v1
+	jal itos
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	la $a0, menu_8_3
+	jal Ghi_Fout
+	move $a0, $t0
+	jal itos
+	la $a0, buffer_1024
+	jal Ghi_Fout
+	la $a0, newline
+	jal Ghi_Fout
+	
+	
+	la $a0, fout_buffer
+	li $v0, 4
+	syscall
+	
+	j Menu_Exit
+
+
+Menu_Exit:
+	# pop stack
+	lw $t0, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 12
+	
+	# ket thuc ham
+	jr $ra
+# ================================
+	
 
 # ===== Tach DD, MM, YYYY ========
 # void Time($a0: string DD/MM/YYYY, $a1: int 1 for D1, 2 for D2)
@@ -357,34 +827,148 @@ KiemTra_Input_Exit:
 # ================================
 
 
+
+# ===== Kiem tra ngay hop le =====
+# int Check($a0: int mode)
+# return $v0: 1 if valid, 0 if invalid
+Check: 
+	#Push Stack
+ 	subu $sp, $sp, 20
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	sw $s2, 12($sp)
+	sw $t0, 16($sp)
+
+	#Check Mode
+	li,$t0,1
+	beq $a0,$t0,Check_Load_TIME_1
+	j Check_Load_TIME_2
+Check_Load_TIME_1:
+	lw $s0,d1
+	lw $s1,m1
+	lw $s2,y1
+	j Check_Next
+
+Check_Load_TIME_2:
+	lw $s0,d2
+	lw $s1,m2
+	lw $s2,y2
+	j Check_Next
+
+Check_Next:
+#Check Month<=0 ?
+	blez $s1,Check_False
+
+	#Check Month> 12 ?
+	sub $t0,$s1,12
+	bgtz $t0,Check_False
+	
+	#Check Month=2 ?
+	li $t0,2
+	beq $s1,$t0,Check_Month_2
+
+	#Check Month ?
+	div $s1,$t0
+	mfhi $t0
+	beq $t0,$0,Check_Month_Chan
+	j Check_Month_Le
+Check_Month_2:
+	#Check Day<0 ?
+	blez $s0,Check_False
+
+	#Check Day> 29 ?
+	sub $t0,$s0,29
+	bgtz $t0,Check_False
+
+	#Check Day 29 ? 
+	bne $t0,$0,Check_True
+
+	# Day= 29 => Check LeapYear
+	la $a0, ($s2)
+	jal LeapYear
+	move $t0,$v0
+	beq $t0,,$0,Check_False
+	j Check_True
+
+Check_Month_Chan:
+	sub $t0,$s1,7	
+	bltz $t0,Check_Month_30_Days
+	j Check_Month_31_Days
+
+Check_Month_Le:
+	sub $t0,$s1,8	
+	bltz $t0,Check_Month_31_Days
+	j Check_Month_30_Days
+
+Check_Month_30_Days:
+	#Check Day<0 ?
+	blez $s0,Check_False
+
+	#Check Day> 30 ?
+	sub $t0,$s0,30
+	bgtz $t0,Check_False
+	j Check_True
+Check_Month_31_Days:
+	#Check Day<0 ?
+	blez $s0,Check_False
+
+	#Check Day> 31 ?
+	sub $t0,$s0,31
+	bgtz $t0,Check_False
+	j Check_True
+	
+Check_False:
+	li $v0,0
+	j Check_Exit
+
+Check_True:
+	li $v0,1
+	j Check_Exit
+
+Check_Exit:
+	# Pop Stack
+	lw $ra, ($sp)
+	lw $s0, 4($sp)
+	lw $s1, 8($sp)
+	lw $s2, 12($sp)
+	lw $t0, 16($sp)
+	addu $sp, $sp, 20
+	#End Function
+	jr $ra
+# ================================
+
+
+
+
 # ===== Ham nhap bang tay ========
 # void Nhap($a0: int mode)
 Nhap:
 	# push stack
-	subu $sp, $sp, 20
+	subu $sp, $sp, 24
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
 	sw $s2, 12($sp)
 	sw $s3, 16($sp)
+	sw $t0, 20($sp)
 	
-	move $s0, $a0
-	
-	beq $s0, 7, Nhap_2
+	move $t0, $a0
 	
 	# Nhap 1 Date
-	li $s0, 0
-	la $a0, tb_input
+	#li $s0, 0
+	la $a0, tb_input_1
 	li $v0, 4
 	syscall
 Nhap_1:
 	# Nhap ngay
+	li $s0, 0
 	la $a0, tb_input_ngay
 	li $v0, 4
 	syscall
 	
 	la $a0, input_2
-	li $a1, 3
+	li $a1, 4
 	li $v0, 8
 	syscall
 	
@@ -423,7 +1007,7 @@ Nhap_1_day_skip:
 	syscall
 	
 	la $a0, input_2
-	li $a1, 3
+	li $a1, 4
 	li $v0, 8
 	syscall
 	
@@ -462,7 +1046,7 @@ Nhap_1_month_skip:
 	syscall
 	
 	la $a0, input_4
-	li $a1, 5
+	li $a1, 6
 	li $v0, 8
 	syscall
 	
@@ -494,6 +1078,11 @@ Nhap_nam_1_loop:
 	bnez $s3, Nhap_nam_1_loop
 	sw $s2, y1
 	
+	li $a0, 1
+	jal Check
+	beqz $v0, Nhap_1_error
+	
+	beq $t0, 7, Nhap_2
 	j Nhap_Exit
 	
 Nhap_1_error:
@@ -507,7 +1096,7 @@ Nhap_1_error:
 	# Nhap 2 Date
 Nhap_2:	
 	li $s0, 0
-	la $a0, tb_input_1
+	la $a0, tb_input_2
 	li $v0, 4
 	syscall
 	
@@ -518,7 +1107,7 @@ Nhap_2:
 	syscall
 	
 	la $a0, input_2
-	li $a1, 3
+	li $a1, 4
 	li $v0, 8
 	syscall
 	
@@ -556,7 +1145,7 @@ Nhap_2_day_skip:
 	syscall
 	
 	la $a0, input_2
-	li $a1, 3
+	li $a1, 4
 	li $v0, 8
 	syscall
 	
@@ -595,7 +1184,7 @@ Nhap_2_month_skip:
 	syscall
 	
 	la $a0, input_4
-	li $a1, 5
+	li $a1, 6
 	li $v0, 8
 	syscall
 	
@@ -627,17 +1216,11 @@ Nhap_nam_2_loop:
 	bnez $s3, Nhap_nam_2_loop
 	sw $s2, y2
 	
-	# reset gia tri thanh ghi
-	li $s0, 0
-	li $s1, 0
-	li $s2, 0
-	li $s3, 0
+	li $a0, 2
+	jal Check
+	beqz $v0, Nhap_2_error
 	
-	la $a0, tb_input_2
-	li $v0, 4
-	syscall
-	
-	j Nhap_1
+	j Nhap_Exit
 	
 Nhap_2_error:
 	la $a0, tb_input_error
@@ -645,41 +1228,9 @@ Nhap_2_error:
 	syscall
 
 	j Nhap_2
-	
+
 	
 Nhap_Exit:
-	# swap D1 <-> D2
-	subu $sp, $sp, 12
-	
-	lw $s0, d1
-	sw $s0, ($sp)
-	
-	lw $s0, m1
-	sw $s0, 4($sp)
-	
-	lw $s0, y1
-	sw $s0, 8($sp)
-	
-	lw $s0, y2
-	sw $s0, y1
-	
-	lw $s0, 8($sp)
-	sw $s0, y2
-	
-	lw $s0, m2
-	sw $s0, m1
-	
-	lw $s0, 4($sp)
-	sw $s0, m2
-	
-	lw $s0, d2
-	sw $s0, d1
-	
-	lw $s0, ($sp)
-	sw $s0, d2
-	
-	addu $sp, $sp, 12
-	
 	# luu d,m,y vao TIME
 	lw $a0, d1
 	lw $a1, m1
@@ -694,12 +1245,13 @@ Nhap_Exit:
 	jal Date
 	
 	# pop stack
+	lw $t0, 20($sp)
 	lw $s3, 16($sp)
 	lw $s2, 12($sp)
 	lw $s1, 8($sp)
 	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 20
+	addu $sp, $sp, 24
 	
 	# ket thuc ham	
 	jr $ra
@@ -710,27 +1262,67 @@ Nhap_Exit:
 # void Ghi_Fout($a0: string)
 Ghi_Fout:
 	# push stack
-	subu $sp, $sp, 12
+	subu $sp, $sp, 20
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
+	sw $t0, 12($sp)
+	sw $t6, 16($sp)
 	
-	# copy string to buffer
-	la $s0, fout_buffer
-Ghi_Fout_loop:
-	lb $s1, ($a0)
-	sb $s1, ($s0)
-	addi $a0, $a0, 1
+	la $s0, ($a0)
+	la $s1, fout_buffer
+	
+	# lay vi tri hien tai cua buffer
+	la $a0, fout_buffer
+	jal strlen_with_newline
+	addu $s1, $s1, $v0
+	
+	# copy string vao buffer
+Ghi_Fout_loop:	
+	lb $t0, ($s0)
+	sb $t0, ($s1)
 	addi $s0, $s0, 1
-	bnez $s1, Ghi_Fout_loop
-	
+	addi $s1, $s1, 1
+	bnez $t0, Ghi_Fout_loop
+
 	# pop stack
+	lw $t6, 16($sp)
+	lw $t0, 12($sp)
 	lw $s1, 8($sp)
 	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 12
+	addu $sp, $sp, 20
 	
-	# exit from function
+	# ket thuc function
+	jr $ra
+# ================================
+
+
+# ===== Xu li file input =========
+# void XuLiInput()
+XuLiInput:
+	# push stack
+	subu $sp, $sp, 16
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $t0, 8($sp)
+	sw $t1, 12($sp)
+	
+	la $s0, fin_buffer
+	
+	li $t0, 0
+	li $t1, 0
+XuLiInput_GetDM1:
+	
+	
+	# pop stack
+	lw $t1, 12($sp)
+	lw $t0, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp,16
+	
+	# ket thuc ham
 	jr $ra
 # ================================
 
@@ -743,18 +1335,31 @@ Doc_File:
 	sw $ra, ($sp)
 	sw $s6, 4($sp)
 	
-	jal Distance2day
-	move $a0,$v0
+	# open input file
+	la $a0, fin
+	li $a1, 0
+	li $a2, 0
+	li $v0, 13
+	syscall
+	move $s6, $v0
 	
-	li $v0,1
+	# read opened input file
+	move $a0, $s6
+	la $a1, fin_buffer
+	li $a2, 1024
+	li $v0, 14
 	syscall
 	move $s0, $v0  # input length
 	
-	addi $v0, $a0, '0'
+	# close input file
+	move $a0, $s6
+	li $v0, 16
+	syscall
 	
 	# pop stack
 	lw $ra, ($sp)
-	addu $sp, $sp, 4
+	lw $s6, 4($sp)
+	addu $sp, $sp, 8
 	
 	# ket thuc ham	
 	jr $ra
@@ -805,204 +1410,199 @@ Xuat_File:
 	jr $ra
 # ================================
 
-#===== Ham Convert ========
-#char* Convert($a0: char*, $a1: char type ABC, $a2: Char * Month_Name)
-#return char * Type
-# Need Temp2: .space 2 for temp and Type: .space 20 for return
-Convert:
-	#push stack
-	subu $sp,$sp,20
-	sw $ra,($sp)
-	sw $a0,4($sp)	
-	sw $t1,8($sp)
-	sw $t2,12($sp)
-	sw $t3,16($sp)
-	#Check type
-	beq $a1,'A',TypeA
-	beq $a1,'B',TypeB
-	beq $a1,'C',TypeC
-TypeA: # MM/DD/YYYY
-	la $t1,Temp2 
-	lb $t2,($a0) #Dd/mm/yyyy
-	sb $t2,($t1) 
-	addi $t1,$t1,1
-	addi $a0,$a0,1
-	lb $t2,($a0) #dD/mm/yyyy
-	sb $t2,($t1)
-	addi $a0,$a0,2 #cong a0 len phan tu thu 3 la dd/Mm/yyyy
-	la $v0,Type
-	lb $t3,($a0) #luu Mm vao t3
-	sb $t3,($v0) #luu vo v0 -> M
-	addi $a0,$a0,1
-	addi $v0,$v0,1
-	lb $t3,($a0) #luu mM vao t3
-	sb $t3,($v0) #luu vo v0 -> MM
-	addi $v0,$v0,1
-	li $t3,'/'
-	sb $t3,($v0)
-	# Store DD to MM/
-	addi $v0,$v0,1
-	la $t2,Temp2
-	lb $t3,($t2)
-	sb $t3,($v0)
-	#Store D to MM/D
-	addi $v0,$v0,1
-	addi $t2,$t2,1
-	lb $t3,($t2)
-	sb $t3,($v0)
-	addi $t3,$t3,1
-	addi $v0,$v0,1
-	li $t3,'/'
-	sb $t3,($v0)
-	#Copy Year
-	li $t2,6
-	lw $a0, 4($sp)
-	la $v0,Type
-	add $a0,$a0,$t2
-	add $v0,$v0,$t2
-While:
-	ble $t2,9,Copy_Year
-	j Exit
-Copy_Year:
-	lb $t3,($a0)
-	sb $t3,($v0)
-	addi $a0,$a0,1
-	addi $v0,$v0,1
-	addi $t2,$t2,1
-	j While
-TypeB: #Month DD, YYYY
-	addi $a0,$a0,3
-	la $t1,Temp2
-	#copy MM
-	lb $t2,($a0)
-	sb $t2,($t1)
-	addi $a0,$a0,1
-	addi $t1,$t1,1
-	lb $t2,($a0)
-	sb $t2,($t1)
-	#Convert char month to int month
-	la $a0,Temp2
-	jal atoi
-	move $t1,$v0
-	subi $t1,$t1,1
-	li $t2,4
-	mult $t1,$t2
-	mflo $t1	
-	add $a2,$a2,$t1
-	lw $a0,($a2)
-	jal Find_Length	
-	move $t3,$v0
 
-	la $v0,Type
-	li $t2,0
-	lw $a0,($a2)
-Copy_Month:
-	bge $t2,$t3,Con_B
-	lb $t1,($a0)
-	sb $t1,($v0)
-	addi $t2,$t2,1
-	addi $a0,$a0,1
-	addi $v0,$v0,1
-	j Copy_Month
-Con_B:
-	#add ' '
-	li $t1,' ' 
-	sb $t1,($v0)
-	#add dd
-	lw $a0, 4($sp)
-	addi $v0,$v0,1
-	lb $t1,($a0)
-	sb $t1,($v0)
-	addi $v0,$v0,1
-	addi $a0,$a0,1
-	lb $t1,($a0)
-	sb $t1,($v0)
-	#add ','
-	addi $v0,$v0,1
-	li $t1,','
-	sb $t1,($v0)
-	#copy yyyy
-	addi $v0,$v0,1
-	lw $a0,4($sp)
-	addi $a0,$a0,6
-	li $t1,0
-Copy_YearB:
-	bge $t1,4,Exit
-	lb $t2,($a0)
-	sb $t2,($v0)
-	addi $t1,$t1,1
-	addi $a0,$a0,1
-	addi $v0,$v0,1
-	j Copy_YearB
-TypeC:
-	#copy dd
-	la $v0,Type
-	lb $t1,($a0)
-	sb $t1,($v0)
-	addi $a0,$a0,1
-	addi $v0,$v0,1
-	lb $t1,($a0)
-	sb $t1,($v0)
-	#add space to v0
-	addi $v0,$v0,1
-	li $t1,' '
-	sb $t1,($v0)
-	addi $v0,$v0,1
-	#copy month from a0 to temp2
-	addi $a0,$a0,2
-	la $t1,Temp2
-	lb $t2,($a0)
-	sb $t2,($t1)
-	addi $a0,$a0,1
-	addi $t1,$t1,1
-	lb $t2,($a0)
-	sb $t2,($t1)	
-	#Find Month int then int to char
-	la $t2,Temp2
-	move $a0,$t2
+# ==== Ham chuyen doi TIME =======
+# void Convert($a0: string, $a1: char mode)
+Convert:
+	# push stack
+	subu $sp, $sp, 32
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	sw $s2, 12($sp)
+	sw $t0, 16($sp)
+	sw $t1, 20($sp)
+	sw $t2, 24($sp)
+	sw $t3, 28($sp)
+	
+	la $s2, Type
+	beq $a1, 'A', Convert_A
+	
+	# lay thang
+	la $s0, ($a0)
+	la $s1, Month_Name
+	
+	lb $a0, 4($s0)
 	jal atoi
-	move $t1,$v0
-	subi $t1,$t1,1
-	la $t2,4
-	mult $t1,$t2
-	mflo $t1
-	add $a2,$a2,$t1
-	lw $a0,($a2)
-	jal Find_Length
-	move $t3,$v0
-	#Copy Month To v0
-	la $v0,Type
-	addi $v0,$v0,3
-	li $t2,0
-	lw $a0,($a2)
-Copy_Month_C:
-	bge $t2,$t3,Con_C
-	lb $t1,($a0)
-	sb $t1,($v0)
-	addi $t2,$t2,1
-	addi $a0,$a0,1
-	addi $v0,$v0,1
-	j Copy_Month_C
-Con_C:
-	#copy ',' to v0
-	li $t1,','
-	sb $t1,($v0)
-	addi $v0,$v0,1
-	#Copy Year
-	lw $a0,4($sp)
-	addi $a0,$a0,6
-	li $t1,0
-	j Copy_YearB
-Exit:
-	#pop stack
-	lw $ra,($sp)
-	lw $a0,4($sp)	
-	lw $t1,8($sp)
-	lw $t2,12($sp)
-	lw $t3,16($sp)
-	addu $sp,$sp,20
-	jr $ra 
-# ===========================================
+	move $t0, $v0
+	
+	lb $a0, 3($s0)
+	jal atoi
+	mul $t1, $v0, 10
+	add $t0, $t0, $t1
+	
+	li $t1, 1 # i = 1
+Convert_Find_Month:
+	beq $t1, $t0, Convert_Skip 
+	addu $s1, $s1, 4
+	addi $t1, $t1, 1
+	bne $t1, $t0, Convert_Find_Month  # while (i != month)
+Convert_Skip:
+	lw $t0, ($s1)
+
+	beq $a1, 'B', Convert_B
+	beq $a1, 'C', Convert_C
+	
+Convert_A:
+	# copy /
+	lb $t2, 2($a0)
+	sb $t2, 2($s2)
+	lb $t2, 5($a0)
+	sb $t2, 5($s2)
+	
+	# copy nam
+	lb $t2, 6($a0)
+	sb $t2, 6($s2)
+	lb $t2, 7($a0)
+	sb $t2, 7($s2)
+	lb $t2, 8($a0)
+	sb $t2, 8($s2)
+	lb $t2, 9($a0)
+	sb $t2, 9($s2)
+	
+	# doi cho DD, MM
+	# copy ngay
+	lb $t2, 0($a0)
+	sb $t2, 3($s2)
+	lb $t2, 1($a0)
+	sb $t2, 4($s2)
+	
+	lb $t2, 3($a0)
+	sb $t2, 0($s2)
+	lb $t2, 4($a0)
+	sb $t2, 1($s2)
+	
+	j Convert_Exit
+	
+Convert_B:
+	la $s1, Month_Name_Len
+	mul $t1, $t1, 4
+	addu $s1, $s1, $t1
+	subu $s1, $s1, 4
+	lw $t1, ($s1)
+	
+	# copy thang
+	li $t2, 0  # i = 1
+Convert_B_Month_Loop:
+	lb $t3, ($t0)
+	sb $t3, ($s2)
+	addu $t0, $t0, 1
+	addu $s2, $s2, 1
+	addi $t2, $t2, 1
+	bne $t2, $t1, Convert_B_Month_Loop  # while (i != month.strlen)
+	
+	li $t3, ' '
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	# copy ngay
+	lb $t3, 0($s0)
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	lb $t3, 1($s0)
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	# ghi dau ,
+	li $t3, ','
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	li $t3, ' '
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	# copy nam
+	lb $t2, 6($s0)
+	sb $t2, ($s2)
+	addu $s2, $s2, 1
+	lb $t2, 7($s0)
+	sb $t2, ($s2)
+	addu $s2, $s2, 1
+	lb $t2, 8($s0)
+	sb $t2, ($s2)
+	addu $s2, $s2, 1
+	lb $t2, 9($s0)
+	sb $t2, ($s2)
+
+	j Convert_Exit
+	
+Convert_C:
+	# copy ngay
+	lb $t3, 0($s0)
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	lb $t3, 1($s0)
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	li $t3, ' '
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	la $s1, Month_Name_Len
+	mul $t1, $t1, 4
+	addu $s1, $s1, $t1
+	subu $s1, $s1, 4
+	lw $t1, ($s1)
+	
+	# copy thang
+	li $t2, 0  # i = 1
+Convert_C_Month_Loop:
+	lb $t3, ($t0)
+	sb $t3, ($s2)
+	addu $t0, $t0, 1
+	addu $s2, $s2, 1
+	addi $t2, $t2, 1
+	bne $t2, $t1, Convert_C_Month_Loop  # while (i != month.strlen)
+	
+	# ghi dau ,
+	li $t3, ','
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	li $t3, ' '
+	sb $t3, ($s2)
+	addu $s2, $s2, 1
+	
+	# copy nam
+	lb $t2, 6($s0)
+	sb $t2, ($s2)
+	addu $s2, $s2, 1
+	lb $t2, 7($s0)
+	sb $t2, ($s2)
+	addu $s2, $s2, 1
+	lb $t2, 8($s0)
+	sb $t2, ($s2)
+	addu $s2, $s2, 1
+	lb $t2, 9($s0)
+	sb $t2, ($s2)
+	
+Convert_Exit:
+	# pop stack
+	lw $t3, 28($sp)
+	lw $t2, 24($sp)
+	lw $t1, 20($sp)
+	lw $t0, 16($sp)
+	lw $s2, 12($sp)
+	lw $s1, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 32
+	
+	# ket thuc ham
+	jr $ra
+# ================================
 
 
 # =====	Ham Input ngay thang nam, check hop le va xuat chuoi	=====
@@ -1169,6 +1769,53 @@ itoa:
 	jr $ra
 # ================================
 
+# ===== int to string ============
+# void stoi($a0: int)
+# saved to buffer_1024
+itos:
+	# push stack
+	subu $sp, $sp, 16
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $t0, 8($sp)
+	sw $t1, 12($sp)
+	
+	move $s0, $a0
+	
+	li $t0, 0
+itos_loop:
+	div $s0, $s0, 10
+	mfhi $t1
+	addu $t1, $t1, '0'
+	
+	subu $sp, $sp, 4
+	sw $t1, ($sp)
+	
+	addi $t0, $t0, 1
+	bnez $s0, itos_loop
+	
+	la $s0, buffer_1024
+itos_pop_loop:
+	lw $t1, ($sp)
+	addu $sp, $sp, 4
+	sb $t1, ($s0)
+	addu $s0, $s0, 1
+	subi $t0, $t0, 1
+	bnez $t0, itos_pop_loop
+	
+	li $t1, 0
+	sb $t1, ($s0)
+itos_Exit:
+	# pop stack
+	lw $t1, 12($sp)
+	lw $t0, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 16
+	
+	# ket thuc ham
+	jr $ra
+# ================================
 
 # ===== atoi =====================
 # int atoi($a0: char 1 digit)
@@ -1188,6 +1835,49 @@ atoi:
 	jr $ra
 # ================================
 
+
+# ===== Lay do dai chuoi =========
+# int strlen_with_newline($a0: string)
+# return $v0: int strlen
+strlen_with_newline:
+	# push stack
+	subu $sp, $sp, 24
+	sw $ra, ($sp)
+	sw $s0, 4($sp)
+	sw $s1, 8($sp)
+	sw $s2, 12($sp)
+	sw $t0, 16($sp)
+	sw $t1, 20($sp)
+	
+	#la $t0, newline
+	#lb $t1, ($t0)
+	
+	li $s0, 0
+	la $s2, ($a0)
+strlen_with_newline_loop:
+	lb $s1, ($s2)
+	beqz $s1, strlen_with_newline_end  # check null
+	#beq $s1, $t1, strlen_with_newline_end # check newline
+	addi $s2, $s2, 1
+	addi $s0, $s0, 1  # len = len + 1
+	j strlen_loop
+strlen_with_newline_end:
+	move $v0, $s0
+	
+	# pop stack
+	lw $t1, 20($sp)
+	lw $t0, 16($sp)
+	lw $s2, 12($sp)
+	lw $s1, 8($sp)
+	lw $s0, 4($sp)
+	lw $ra, ($sp)
+	addu $sp, $sp, 24
+	
+	# ket thuc ham	
+	jr $ra
+# ================================
+
+
 # ===== Lay do dai chuoi =========
 # int strlen($a0: string)
 # return $v0: int strlen
@@ -1204,6 +1894,7 @@ strlen:
 	la $t0, newline
 	lb $t1, ($t0)
 	
+	li $s0, 0
 	la $s2, ($a0)
 strlen_loop:
 	lb $s1, ($s2)
@@ -1586,8 +2277,8 @@ XuLi:
 	addu $sp,$sp,28
 	jr $ra
 #==========================
-end:
-	li $v0,10
+
+
 #==================ham tinh thu trong tuan===========================
    # char * WeekDay($a0: ngay, $a1: thang, $a2: nam) : store address of the day into reg $v0 and return it
 # dau thu tuc
@@ -1673,10 +2364,10 @@ CanChi:
 	# push stack
 	subu	$sp,$sp,20
 	sw	$ra,($sp)
-	sw	$t0,($sp)
-	sw	$t1,($sp)
-	sw	$s0,($sp)
-	sw	$s1,($sp)
+	sw	$t0,4($sp)
+	sw	$t1,8($sp)
+	sw	$s0,12($sp)
+	sw	$s1,16($sp)
 	
 	# Gan gia tri
 	addi 	$s0,$a0,0		# Gan gia tri nam hien tai vao thanh ghi $s0 de tinh toan Can
