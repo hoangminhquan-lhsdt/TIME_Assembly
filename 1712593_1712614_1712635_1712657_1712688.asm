@@ -2398,24 +2398,14 @@ CanChi:
 	la	$t0,0($s0)	#Truyen so byte can tang cua mang Can va Chi vao 2 thanh ghi $t0,$t1
 	la	$t1,0($s1)
 	
-	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Can cua nam
+	# Tang dia chi vung nho len voi so byte da tinh va gan dia chi Can vao $v0 va Chi vao $v1
 	la	$s0,Can
 	addu	$s0,$s0,$t0	
-	li	$v0,4
-	lw	$a0,0($s0)
-	syscall
+	lw	$v0,0($s0)
 	
-	# Xuat ra dau cach
-	la	$a0,_space
-	li	$v0,4
-	syscall
-	
-	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Chi cua nam
 	la	$s0,Chi
 	addu	$s0,$s0,$t1	
-	li	$v0,4
-	lw	$a0,0($s0)
-	syscall
+	lw	$v1,0($s0)
 	
 	# pop stack
 	lw $ra,($sp)
