@@ -73,14 +73,18 @@ Chi12: .asciiz "Hoi"
 Can: .word Can1,Can2,Can3,Can4,Can5,Can6,Can7,Can8,Can9,Can10
 Chi: .word Chi1,Chi2,Chi3,Chi4,Chi5,Chi6,Chi7,Chi8,Chi9,Chi10,Chi11,Chi12
 
-weeksday: # bang tra thu trong tuan
-		.asciiz "Chu Nhat"
-		.asciiz "Thu Hai"
-		.asciiz "Thu Ba"
-	 	.asciiz "Thu Tu"
-	 	.asciiz "Thu Nam"
-	 	.asciiz "Thu Sau"
-		.asciiz "Thu Bay"
+ # bang tra thu trong tuan
+sun:	.asciiz "chu nhat"
+mon:	.asciiz "thu hai"
+tue:	.asciiz "thu ba"
+wed:	.asciiz "thu tu"
+thu:	.asciiz "thu nam"
+fri:	.asciiz "thu sau"
+sat:	.asciiz "thu bay"
+weeksday: 
+	.word sun,mon,tue,wed,thu,fri,sat
+	.word 0 # null char
+	
 Temp2: .space 2
 TempYear: .space 4
 text1: .asciiz "\nNam nhuan 1: "
@@ -2280,7 +2284,7 @@ XuLi:
 
 
 #==================ham tinh thu trong tuan===========================
-   # char * WeekDay($a0: ngay, $a1: thang, $a2: nam) : store address of the day into reg $v0 and return it
+	# char * WeekDay($a0: ngay, $a1: thang, $a2: nam) : store address of the day at reg $v0 and return it
 # dau thu tuc
 WeekDay:
 	#khai bao stack
@@ -2337,17 +2341,15 @@ start_cal:
 	div $s0,$t0
 	mfhi $s0	# s0= s0 mod 7
 	
-	li $t0,0
-	la $t1,weeksday
-correspondedDay:
-	bne $t0,$s0,tangAddr
-	move $v0,$t1
-	j endWeekDay
-tangAddr:
-	addi $t0,$t0,1
-	addi $t1,$t1,4
-	j correspondedDay
-endWeekDay:
+	li $t0,4
+	mult $s0,$t0 # Tinh so byte can tang trong mang weeksday
+	mflo $s0
+	
+	la $t0,0($s0)
+	la $s0,weeksday
+	addu $s0,$s0,$t0	
+	lw $v0,0($s0) #return address of day of week
+#endWeekDay
 	#tra thanh ghi
 	lw $ra,($sp)
 	lw $t0,4($sp)
