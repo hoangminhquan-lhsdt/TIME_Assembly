@@ -107,7 +107,8 @@ menu_4: .asciiz "\t4.Cho biet ngay vua nhap la ngay thu may trong tuan\n"
 menu_4_1: .asciiz " la "
 menu_5: .asciiz "\t5.Cho biet ngay vua nhap la ngay thu may ke tu ngay 1/1/1\n"
 menu_5_1: .asciiz "Khoang cach tu ngay 01/01/0001 den ngay "
-menu_5_2: .asciiz " ngay"
+menu_5_2: .asciiz " la "
+menu_5_3: .asciiz " ngay"
 menu_6: .asciiz "\t6.Cho biet can chi cua nam vua nhap\n"
 menu_6_1: .asciiz " la nam "
 menu_7: .asciiz "\t7.Cho biet khoang thoi gian giua chuoi TIME_1 va TIME_2\n"
@@ -284,16 +285,15 @@ Menu_4:
 Menu_5:
 	la $a0, menu_result
 	li $v0, 4
-	syscall
+	syscall	
 	
-	la $a0, menu_4_1
-	li $v0, 4
+	la $a0, menu_5_1
 	syscall
 	
 	la $a0, TIME_1
 	syscall
 	
-	la $a0, menu_5_1
+	la $a0, menu_5_2
 	syscall
 	
 	lw $a0, d1
@@ -305,7 +305,7 @@ Menu_5:
 	li $v0, 1
 	syscall
 	
-	la $a0, menu_5_2
+	la $a0, menu_5_3
 	li $v0, 4
 	syscall
 	j Menu_Exit
@@ -2215,69 +2215,73 @@ DayFrom1:
 	# Push Stack
 	subu $sp,$sp,28
 	sw $ra,($sp)
-	sw $a0,4($sp)
-	sw $a1,8($sp)
-	sw $a2,12($sp)
-	sw $s0,16($sp)
-	sw $s1,20($sp)
-	sw $t0,24($sp)
+	sw $t0,4($sp)
+	sw $t1,8($sp)
+	sw $t2,12($sp)
+	sw $t3,16($sp)
+	sw $s0,20($sp)
+	sw $s1,24($sp)
+
+	move $t0,$a0
+	move $t1,$a1
+	move $t2,$a2
 	#Kiem tra dieu kien
-	li $t0,3
-	sub $t0,$a2,$t0
-	bltz $t0,XuLiDK
-	j XuLi
+	li $t3,3
+	sub $t3,$t2,$t3
+	bltz $t3,Dayfrom1_XuLiDK
+	j Dayfrom1_XuLi
 
 
-XuLiDK:
-	sub $a2,$a2,1
+Dayfrom1_XuLiDK:
+	sub $t2,$t2,1
 	add $a1,$a1,12
-	j XuLi
-XuLi:
+	j Dayfrom1_XuLi
+Dayfrom1_XuLi:
 	#+365 * year
 	li $s0,0
-	li $t0,365
-	mult $t0,$a2
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,365
+	mult $t3,$t2
+	mflo $t3
+	add $s0,$s0,$t3
 	#+year/4
-	li $t0,4
-	div $a2,$t0
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,4
+	div $t2,$t3
+	mflo $t3
+	add $s0,$s0,$t3
 	#-year/100
-	li $t0,100
-	div $a2,$t0
-	mflo $t0
-	sub $s0,$s0,$t0
+	li $t3,100
+	div $t2,$t3
+	mflo $t3
+	sub $s0,$s0,$t3
 	#+year/400
-	li $t0,400
-	div $a2,$t0
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,400
+	div $t2,$t3
+	mflo $t3
+	add $s0,$s0,$t3
 	#+ (153 * month - 457)
-	li $t0,153
-	mult $t0,$a1
+	li $t3,153
+	mult $t3,$a1
 	mflo $s1
-	li $t0,457
-	sub $s1,$s1,$t0
-	li $t0,5
-	div $s1,$t0
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,457
+	sub $s1,$s1,$t3
+	li $t3,5
+	div $s1,$t3
+	mflo $t3
+	add $s0,$s0,$t3
 	#+day-306
 	add $s0,$s0,$a0
-	li $t0,306
-	sub $s0,$s0,306
+	li $t3,306
+	sub $s0,$s0,307
 	# return ket qua
 	move $v0,$s0
 	# popstack	
 	lw $ra,($sp)
-	lw $a0,4($sp)
-	lw $a1,8($sp)
-	lw $a2,12($sp)
-	lw $s0,16($sp)
-	lw $s1,20($sp)
-	lw $t0,24($sp)
+	lw $t0,4($sp)
+	lw $t1,8($sp)
+	lw $t2,12($sp)
+	lw $t3,16($sp)
+	lw $s0,20($sp)
+	lw $s1,24($sp)
 	addu $sp,$sp,28
 	jr $ra
 #==========================
