@@ -310,7 +310,6 @@ Menu_5:
 	syscall
 	j Menu_Exit
 	
-	
 Menu_6:
 	la $a0, menu_result
 	li $v0, 4
