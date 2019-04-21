@@ -2220,13 +2220,13 @@ DayFrom1:
 	move $t2,$a2
 	# Kiem tra dieu kien
 	li $t3,3
-	sub $t3,$t2,$t3
-	bltz $t3,Dayfrom1_XuLiDK
+	sub $t3,$t1,$t3
+	blez $t3,Dayfrom1_XuLiDK
 	j Dayfrom1_XuLi
 
 Dayfrom1_XuLiDK:
 	sub $t2,$t2,1
-	add $a1,$a1,12
+	add $t1,$t1,12
 	j Dayfrom1_XuLi
 Dayfrom1_XuLi:
 	# +365 * year
@@ -2250,19 +2250,18 @@ Dayfrom1_XuLi:
 	div $t2,$t3
 	mflo $t3
 	add $s0,$s0,$t3
-	# +(153 * month - 457)
+	# +(153 * month +8)/5
 	li $t3,153
-	mult $t3,$a1
+	mult $t3,$t1
 	mflo $s1
-	li $t3,457
-	sub $s1,$s1,$t3
+	add $s1,$s1,8
 	li $t3,5
 	div $s1,$t3
 	mflo $t3
 	add $s0,$s0,$t3
-	# +day-306
-	add $s0,$s0,$a0
-	sub $s0,$s0,306
+	# +day-400
+	add $s0,$s0,$t0
+	sub $s0,$s0,400
 	# return ket qua
 	move $v0,$s0
 	# popstack	
@@ -2388,7 +2387,7 @@ CanChi:
 	addi	$t0,$zero,4	# Tao bien chua gia tri 4 va thuc hien nhan
 		
 	mult	$s0,$t0		
-	mflo	$s0		# Tinh to�n so byte can tang trong mang Can	
+	mflo	$s0		# Tinh to?n so byte can tang trong mang Can	
 	
 	mult	$s1,$t0
 	mflo	$s1		# Tinh toan so byte can tang trong mang Chi	
