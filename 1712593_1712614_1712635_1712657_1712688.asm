@@ -6,28 +6,30 @@ tb_input_ngay: .asciiz "Nhap ngay: "
 tb_input_thang: .asciiz "Nhap thang: "
 tb_input_nam: .asciiz "Nhap nam: "
 tb_input_error: .asciiz "Du lieu nhap vao khong hop le, moi nhap lai:\n"
+
 fin: .asciiz "./input.txt"
 fin_buffer: .space 1024
 fout: .asciiz "./output.txt"
-fout_buffer: .space 4096
+fout_buffer: .space 1024
+
 newline: .asciiz "\n"
 _space: .asciiz " "
+
 TIME_1: .space 100
 TIME_2: .space 100
 input_2: .space 5
 input_4: .space 7
 buffer_1024: .space 1024
+
 selection: .word 7
+
 d1: .word 0
 m1: .word 0
 y1: .word 0
 d2: .word 0
 m2: .word 0
 y2: .word 0
-date: .asciiz"Nhap ngay: "
-month: .asciiz"Nhap thang: "
-year: .asciiz"Nhap nam: "
-reinput: .asciiz"Nhap sai dinh dang, moi nhap lai\n"
+
 Arr_Of_Date: .word 31,28,31,30,31,30,31,31,30,31,30,31
 Month_Name_Len: .word 7,8,5,5,3,4,4,6,9,7,8,8
 Month_Name: .word mon1,mon2,mon3,mon4,mon5,mon6,mon7,mon8,mon9,mon10,mon11,mon12
@@ -779,7 +781,6 @@ Format_YR:
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
 	sw $t0, 12($sp)
-	#sw $t1, 16($sp)
 	
 	# push tung ki tu vao stack
 	la $s0, ($a0)
@@ -819,7 +820,6 @@ Format_YR_pop:
 	
 	
 	# pop stack
-	#lw $t1, 16($sp)
 	lw $t0, 12($sp)
 	lw $s1, 8($sp)
 	lw $s0, 4($sp)
@@ -850,8 +850,8 @@ KiemTra_Input:
 KiemTra_Input_loop:
 	lb $s2, ($a0)
 	beq $s2, 32, KiemTra_Input_space
-	blt $s2, 48, Input_Invalid # if ($s2 < '0')
-	bgt $s2, 57, Input_Invalid # if ($s2 > '9')
+	blt $s2, 48, Input_Invalid  # if ($s2 < '0')
+	bgt $s2, 57, Input_Invalid  # if ($s2 > '9')
 KiemTra_Input_space:
 	addi $a0, $a0, 1
 	subi $s6, $s6, 1
@@ -884,7 +884,7 @@ KiemTra_Input_Exit:
 # int Check($a0: int mode)
 # return $v0: 1 if valid, 0 if invalid
 Check: 
-	#Push Stack
+	# Push Stack
  	subu $sp, $sp, 20
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
@@ -892,7 +892,7 @@ Check:
 	sw $s2, 12($sp)
 	sw $t0, 16($sp)
 
-	#Check Mode
+	# Check Mode
 	li,$t0,1
 	beq $a0,$t0,Check_Load_TIME_1
 	j Check_Load_TIME_2
@@ -909,34 +909,34 @@ Check_Load_TIME_2:
 	j Check_Next
 
 Check_Next:
-#Check Month<=0 ?
+	# Check Month <= 0 ?
 	blez $s1,Check_False
 
-	#Check Month> 12 ?
+	#Check Month > 12 ?
 	sub $t0,$s1,12
 	bgtz $t0,Check_False
 	
-	#Check Month=2 ?
+	# Check Month = 2
 	li $t0,2
 	beq $s1,$t0,Check_Month_2
 
-	#Check Month ?
+	# Check Month
 	div $s1,$t0
 	mfhi $t0
 	beq $t0,$0,Check_Month_Chan
 	j Check_Month_Le
 Check_Month_2:
-	#Check Day<0 ?
+	# Check Day < 0 ?
 	blez $s0,Check_False
 
-	#Check Day> 29 ?
+	# Check Day > 29 ?
 	sub $t0,$s0,29
 	bgtz $t0,Check_False
 
-	#Check Day 29 ? 
+	# Check Day 29 ? 
 	bne $t0,$0,Check_True
 
-	# Day= 29 => Check LeapYear
+	# Day = 29 => Check LeapYear
 	la $a0, ($s2)
 	jal LeapYear
 	move $t0,$v0
@@ -954,18 +954,18 @@ Check_Month_Le:
 	j Check_Month_30_Days
 
 Check_Month_30_Days:
-	#Check Day<0 ?
+	# Check Day < 0 ?
 	blez $s0,Check_False
 
-	#Check Day> 30 ?
+	# Check Day > 30 ?
 	sub $t0,$s0,30
 	bgtz $t0,Check_False
 	j Check_True
 Check_Month_31_Days:
-	#Check Day<0 ?
+	# Check Day < 0 ?
 	blez $s0,Check_False
 
-	#Check Day> 31 ?
+	# Check Day > 31 ?
 	sub $t0,$s0,31
 	bgtz $t0,Check_False
 	j Check_True
@@ -986,7 +986,7 @@ Check_Exit:
 	lw $s2, 12($sp)
 	lw $t0, 16($sp)
 	addu $sp, $sp, 20
-	#End Function
+	# End Function
 	jr $ra
 # ================================
 
@@ -1008,7 +1008,6 @@ Nhap:
 	move $t0, $a0
 	
 	# Nhap 1 Date
-	#li $s0, 0
 	la $a0, tb_input_1
 	li $v0, 4
 	syscall
@@ -1497,15 +1496,7 @@ Xuat_File:
 	# push stack
 	subu $sp, $sp, 4
 	sw $ra, ($sp)
-	
-	# add '\0'
-	#la $a0, fout_buffer
-	#jal strlen
-	#addi $s6, $s6, 1
-	#move $s6, $v0
-	#add $a0, $a0, $s6
-	#addu $s6, $0, '\0'
-	#sb $s6, ($a0)
+
 	
 	# open output file
 	la $a0, fout
@@ -1730,104 +1721,6 @@ Convert_Exit:
 # ================================
 
 
-# =====	Ham Input ngay thang nam, check hop le va xuat chuoi	=====
-# void Input_And_Check_Function( $a0: char, $a1: Arr_Of_Date)
-Input_And_Check_Function:
-	#push stack
-	subu $sp,$sp,28
-	sw $ra,($sp)
-	sw $a0,4($sp) #save Arr_Of_Date
-	sw $t1,8($sp)
-	sw $t2,12($sp)
-	sw $t3,16($sp)
-	sw $t4,20($sp)
-	sw $t5,24($sp)
-Input:	
-	# Input day month year
-	li $v0,4
-	la $a0,date
-	syscall
-	li $v0,5
-	syscall
-	move $t1,$v0
-	
-	li $v0,4
-	la $a0,month
-	syscall
-	li $v0,5
-	syscall 
-	move $t2,$v0
-	
-	li $v0,4
-	la $a0,year
-	syscall
-	li $v0,5
-	syscall
-	move $t3,$v0
-	
-	j Check_Input
-	#Check Input	
-Check_Input:
-	sge $t4,$t1,1
-	sle $t5,$t1,31
-	bne $t4,$t5,ReInput
-	
-	sge $t4,$t2,1
-	sle $t5,$t2,12
-	bne $t4,$t5,ReInput
-
-	ble $t3,0,ReInput
-	j Continue
-ReInput:
-	li $v0,4
-	la $a0,reinput
-	syscall
-	j Input
-Continue:
-	#Check Leap Year
-	move $a0,$t3
-	jal LeapYear
-	move $t4,$v0 #save return of LeapYear to t4
-	beq $t4,1,Check_Month_2_Leap
-	j Check_Month_1_To_12
-Check_Month_2_Leap: 
-	sge $t4,$t1,1
-	sle $t5,$t1,29
-	bne $t4,$t5,ReInput
-Check_Month_1_To_12:
-	move $t4,$t2 
-	subi $t4,$t4,1 
-	la $t5,4
-	mult $t4,$t5
-	mflo $t4
-	add $a1,$a1,$t4
-
-	sge $t5,$t1,1
-	lw $a2,($a1)
-	sle $t4,$t1,$a2
-	bne $t4,$t5,ReInput
-	j Convert_To_Char
-Convert_To_Char:
-	lw $t4,4($sp)
-	
-	move $a0,$t1
-	move $a1,$t2
-	move $a2,$t3
-	move $a3,$t4
-
-	jal Date
-	#move $v0,$a3
-	lw $ra,($sp)
-	lw $a0,4($sp)
-	lw $t1,8($sp)
-	lw $t2,12($sp)
-	lw $t3,16($sp)
-	lw $t4,20($sp)
-	lw $t5,24($sp)
-	addu $sp,$sp,28
-	jr $ra
-#=========================================
-
 # ===== Ham kt nam nhuan =====
 # int LeapYear($a0: int Year)
 LeapYear:
@@ -1974,15 +1867,12 @@ strlen_with_newline:
 	sw $t0, 16($sp)
 	sw $t1, 20($sp)
 	
-	#la $t0, newline
-	#lb $t1, ($t0)
 	
 	li $s0, 0
 	la $s2, ($a0)
 strlen_with_newline_loop:
 	lb $s1, ($s2)
 	beqz $s1, strlen_with_newline_end  # check null
-	#beq $s1, $t1, strlen_with_newline_end # check newline
 	addi $s2, $s2, 1
 	addi $s0, $s0, 1  # len = len + 1
 	j strlen_loop
@@ -2024,7 +1914,7 @@ strlen:
 strlen_loop:
 	lb $s1, ($s2)
 	beqz $s1, strlen_end  # check null
-	beq $s1, $t1, strlen_end # check newline
+	beq $s1, $t1, strlen_end  # check newline
 	addi $s2, $s2, 1
 	addi $s0, $s0, 1  # len = len + 1
 	j strlen_loop
@@ -2140,6 +2030,8 @@ Date_i_equals_4:
 	# ket thuc ham	
 	jr $ra
 # ================================
+
+
 # Khoang cach giua 2 ngay TIME_1 va TIME_2
 # int Distance2day($a0: str TIME_1,$a1 str TIME_2
 Distance2day:
@@ -2178,7 +2070,7 @@ Distance2day:
 	move $s1,$v0
 	# Distance from Time_1 to Time_2
 	sub $t0,$s0,$s1
-	bltz $t0,Distance2day_Am # Minus
+	bltz $t0,Distance2day_Am  # Minus
 	j Distance2day_Exit
 Distance2day_Am:
 	sub $t0,$0,$t0
@@ -2198,29 +2090,9 @@ Distance2day_Exit:
 # ========================================================
 
 
-#int find length($a0: char)
-Find_Length:
-	subu $sp,$sp,8
-	sw $ra,($sp)
-	sw $t1,4($sp)
-
-	la $v0,0
-Count:	
-	lb $t1,($a0)
-	beqz $t1, Exit_Find
-	addi $v0,$v0,1
-	addi $a0,$a0,1
-	j Count
-Exit_Find:
-	lw $ra,($sp)
-	lw $t1,4($sp)
-	addu $sp,$sp,8
-	jr $ra
-#======================
-
 #====== Ham tim nam nhuan gan nhat nam duoc chon ======
-#int Find_Leap($a0:char)
-#return $v0: Year1 < Selected Year, $v1: Year2 > Selected Year
+# int Find_Leap($a0:char)
+# return $v0: Year1 < Selected Year, $v1: Year2 > Selected Year
 Find_Leap:
 	subu $sp,$sp,16
 	sw $ra,($sp)	
@@ -2232,7 +2104,7 @@ Find_Leap:
 	jal Convert_Year_Int
 	move $a0,$v0
 	sw $a0,4($sp)
-	#Run For Year 1
+	# Run For Year 1
 	li $t1,1
 Loop:
 	subi $a0,$a0,1
@@ -2272,7 +2144,7 @@ Convert_Year_Int:
 	sw $a1,4($sp)
 	sw $t1,8($sp)
 	sw $t2,12($sp)
-	#copy yyyy to TempYear
+	# copy yyyy to TempYear
 	addi $a0,$a0,6
 	li $t1,0	
 Loop_Int:
@@ -2283,9 +2155,9 @@ Loop_Int:
 	addi $a1,$a1,1
 	addi $t1,$t1,1
 	j Loop_Int
-Con:	#Convert char yyyy to int yyyy
+Con:	# Convert char yyyy to int yyyy
 	lw $a1,4($sp)
-	#phan tu dau x1000
+	# phan tu dau x1000
 	lb $t1,($a1)
 	subi $t1,$t1,'0'
 	li $t2,1000
@@ -2293,7 +2165,7 @@ Con:	#Convert char yyyy to int yyyy
 	mflo $t1
 	sw $t1,8($sp)
 	addi $a1,$a1,1
-	#phan tu 2 nhan 100
+	# phan tu 2 nhan 100
 	lb $t2,($a1)
 	subi $t2,$t2,'0'
 	li $t1,100
@@ -2303,7 +2175,7 @@ Con:	#Convert char yyyy to int yyyy
 	add $t1,$t1,$t2
 	sw $t1,8($sp)
 	addi $a1,$a1,1
-	#phan tu 3 nhan 10
+	# phan tu 3 nhan 10
 	lb $t1,($a1)
 	subi $t1,$t1,'0'
 	li $t2,10
@@ -2313,12 +2185,12 @@ Con:	#Convert char yyyy to int yyyy
 	add $t1,$t1,$t2
 	sw $t1,8($sp)
 	addi $a1,$a1,1
-	#phan tu 4 cong vao stack 8($sp)
+	# phan tu 4 cong vao stack 8($sp)
 	lb $t2,($a1)
 	subi $t2,$t2,'0'
 	lw $t1,8($sp)
 	add $t1,$t1,$t2
-	#pop stack
+	# pop stack
 	move $v0,$t1
 	lw $ra,($sp)
 	lw $a1,4($sp)
@@ -2346,7 +2218,7 @@ DayFrom1:
 	move $t0,$a0
 	move $t1,$a1
 	move $t2,$a2
-	#Kiem tra dieu kien
+	# Kiem tra dieu kien
 	li $t3,3
 	sub $t3,$t2,$t3
 	bltz $t3,Dayfrom1_XuLiDK
@@ -2407,71 +2279,71 @@ Dayfrom1_XuLi:
 
 
 #==================ham tinh thu trong tuan===========================
-	# char * WeekDay($a0: ngay, $a1: thang, $a2: nam) : store address of the day at reg $v0 and return it
+# char * WeekDay($a0: ngay, $a1: thang, $a2: nam) : store address of the day at reg $v0 and return it
 # dau thu tuc
 WeekDay:
-	#khai bao stack
+	# khai bao stack
 	subi $sp,$sp,16
-	#backup thanh ghi
+	# backup thanh ghi
 	sw $ra,($sp)
 	sw $t0,4($sp)
 	sw $t1,8($sp)
-	sw $s0,12($sp) # bien luu ket qua
+	sw $s0,12($sp)  # bien luu ket qua
 	
 #than thu tuc
 	li $t0,3
-	bge $a1,$t0,start_cal #thang>=3
+	bge $a1,$t0,start_cal  # thang>=3
 	addi $a1,$a1,12
 	subi $a2,$a2,1
 	
 start_cal:
 	# 365*year + year/4 - year/100 + year/400 + day + (153*month+8)/5
-	move $s0,$a0	#s0 = day
+	move $s0,$a0	# s0 = day
 	
 	li $t0,365
 	mult $a2,$t0
 	mflo $t0		
-	add $s0,$s0,$t0	#s0 = 365*year + day
+	add $s0,$s0,$t0 	# s0 = 365*year + day
 	
 	li $t0,4
 	div $a2,$t0
 	mflo $t0		
-	add $s0,$s0,$t0	#s0 = 365*year + year/4 + day
+	add $s0,$s0,$t0 	# s0 = 365*year + year/4 + day
 	
 	li $t0,-100
 	div $a2,$t0
 	mflo $t0		
-	add $s0,$s0,$t0	#s0 = 365*year + year/4 -yaer/100 + day
+	add $s0,$s0,$t0 	# s0 = 365*year + year/4 -yaer/100 + day
 	
 	li $t0,400
 	div $a2,$t0
 	mflo $t0		
-	add $s0,$s0,$t0	#s0 = 365*year + year/4 -yaer/100 + year/400 + day
+	add $s0,$s0,$t0 	# s0 = 365*year + year/4 -yaer/100 + year/400 + day
 	
 	li $t0,153
 	mult $a1,$t0
-	mflo $t0	#153*month
+	mflo $t0	 # 153*month
 	
 	li $t1,8
-	add $t0,$t1,$t0	# $t0 = 153*month + 8
+	add $t0,$t1,$t0	 # $t0 = 153*month + 8
 	
 	li $t1,5
 	div $t0,$t1
-	mflo $t0	# $t0 = (153*month + 8) / 5
-	add $s0,$s0,$t0	#s0 = 365*year + year/4 -yaer/100 + year/400 + day + (153*month + 8) / 5
+	mflo $t0	 # $t0 = (153*month + 8) / 5
+	add $s0,$s0,$t0	 # s0 = 365*year + year/4 -yaer/100 + year/400 + day + (153*month + 8) / 5
 	
 	li $t0,7
 	div $s0,$t0
-	mfhi $s0	# s0= s0 mod 7
+	mfhi $s0	 # s0= s0 mod 7
 	
 	li $t0,4
-	mult $s0,$t0 # Tinh so byte can tang trong mang weeksday
+	mult $s0,$t0  # Tinh so byte can tang trong mang weeksday
 	mflo $s0
 	
 	la $t0,0($s0)
 	la $s0,weeksday
 	addu $s0,$s0,$t0	
-	lw $v0,0($s0) #return address of day of week
+	lw $v0,0($s0)  # return address of day of week
 #endWeekDay
 	#tra thanh ghi
 	lw $ra,($sp)
@@ -2504,46 +2376,35 @@ CanChi:
 	addi	$t0,$zero,10
 	addi	$s0,$s0,6
 	div	$s0,$t0
-	mfhi	$s0		# Ap dung cong thuc (nam+6)%10 de tinh vi tr� trong mang Can v� gan ket qua vao lai $s0
+	mfhi	$s0		# Ap dung cong thuc (nam+6)%10 de tinh vi tri trong mang Can va gan ket qua vao lai $s0
 
 	# Tinh Chi
 	addi	$t1,$zero,12
 	add	$s1,$s1,8
 	div	$s1,$t1
-	mfhi	$s1		#Ap dung c�ng thuc (nam+8)%12 de t�nh vi tr� trong mang Chi v� luu ket qua v�o lai $s1
+	mfhi	$s1		# Ap dung cong thuc (nam+8)%12 de tinh vi tri trong mang Chi va luu ket qua vao lai $s1
 	
-	# T�nh so byte can tang th�m de in phan tu trong mang Can v� Chi
-	addi	$t0,$zero,4	#Tao bien chua gia tri 4 va thuc hien nh�n
+	# Tinh so byte can tang them de in phan tu trong mang Can va Chi
+	addi	$t0,$zero,4	# Tao bien chua gia tri 4 va thuc hien nhan
 		
 	mult	$s0,$t0		
-	mflo	$s0		#T�nh to�n so byte can tang trong mang Can	
+	mflo	$s0		# Tinh to�n so byte can tang trong mang Can	
 	
 	mult	$s1,$t0
-	mflo	$s1		#T�nh to�n so byte can tang trong mang Chi	
+	mflo	$s1		# Tinh toan so byte can tang trong mang Chi	
 	
 	# Xuat ra CanChi cua nam
-	la	$t0,0($s0)	#Truyen so byte can tang cua mang Can va Chi vao 2 thanh ghi $t0,$t1
+	la	$t0,0($s0)	# Truyen so byte can tang cua mang Can va Chi vao 2 thanh ghi $t0,$t1
 	la	$t1,0($s1)
 	
 	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Can cua nam
 	la	$s0,Can
-	addu	$s0,$s0,$t0	
-	#li	$v0,4
-	#lw	$a0,0($s0)
-	#syscall
+	addu	$s0,$s0,$t0
 	lw	$s2,0($s0)
-	
-	# Xuat ra dau cach
-	#la	$a0,_space
-	#li	$v0,4
-	#syscall
 	
 	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Chi cua nam
 	la	$s0,Chi
-	addu	$s0,$s0,$t1	
-	#li	$v0,4
-	#lw	$a0,0($s0)
-	#syscall
+	addu	$s0,$s0,$t1
 	lw	$s3,0($s0)
 	
 	move $v0,$s2
