@@ -2358,28 +2358,28 @@ Dayfrom1_XuLiDK:
 	add $a1,$a1,12
 	j Dayfrom1_XuLi
 Dayfrom1_XuLi:
-	#+365 * year
+	# +365 * year
 	li $s0,0
 	li $t3,365
 	mult $t3,$t2
 	mflo $t3
 	add $s0,$s0,$t3
-	#+year/4
+	# +year/4
 	li $t3,4
 	div $t2,$t3
 	mflo $t3
 	add $s0,$s0,$t3
-	#-year/100
+	# -year/100
 	li $t3,100
 	div $t2,$t3
 	mflo $t3
 	sub $s0,$s0,$t3
-	#+year/400
+	# +year/400
 	li $t3,400
 	div $t2,$t3
 	mflo $t3
 	add $s0,$s0,$t3
-	#+ (153 * month - 457)
+	# +(153 * month - 457)
 	li $t3,153
 	mult $t3,$a1
 	mflo $s1
@@ -2389,7 +2389,7 @@ Dayfrom1_XuLi:
 	div $s1,$t3
 	mflo $t3
 	add $s0,$s0,$t3
-	#+day-306
+	# +day-306
 	add $s0,$s0,$a0
 	sub $s0,$s0,306
 	# return ket qua
