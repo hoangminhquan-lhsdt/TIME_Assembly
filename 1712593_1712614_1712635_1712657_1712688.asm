@@ -2391,8 +2391,7 @@ Dayfrom1_XuLi:
 	add $s0,$s0,$t3
 	#+day-306
 	add $s0,$s0,$a0
-	li $t3,306
-	sub $s0,$s0,307
+	sub $s0,$s0,306
 	# return ket qua
 	move $v0,$s0
 	# popstack	
