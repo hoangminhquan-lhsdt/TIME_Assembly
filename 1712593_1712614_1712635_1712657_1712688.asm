@@ -107,19 +107,24 @@ menu_4: .asciiz "\t4.Cho biet ngay vua nhap la ngay thu may trong tuan\n"
 menu_4_1: .asciiz " la "
 menu_5: .asciiz "\t5.Cho biet ngay vua nhap la ngay thu may ke tu ngay 1/1/1\n"
 menu_5_1: .asciiz "Khoang cach tu ngay 01/01/0001 den ngay "
-menu_5_2: .asciiz " ngay"
+menu_5_2: .asciiz " la "
+menu_5_3: .asciiz " ngay"
 menu_6: .asciiz "\t6.Cho biet can chi cua nam vua nhap\n"
 menu_6_1: .asciiz " la nam "
 menu_7: .asciiz "\t7.Cho biet khoang thoi gian giua chuoi TIME_1 va TIME_2\n"
 menu_7_1: .asciiz "Khoang cach tu ngay "
 menu_7_2: .asciiz " den ngay "
 menu_7_3: .asciiz " la "
-menu_7_4: .asciiz " ngay."
+menu_7_4: .asciiz " ngay"
 menu_8: .asciiz "\t8.Cho biet 2 nam nhuan gan nhat voi nam trong chuoi TIME\n"
 menu_8_1: .asciiz "Hai nam nhuan gan voi "
 menu_8_2: .asciiz " nhat la "
 menu_8_3: .asciiz " va "
 menu_9: .asciiz "\t9.Nhap input tu file input.txt va xuat ket qua toan bo cac chuc nang tren ra file output.txt\n"
+menu_9_1f: .asciiz "Chuoi Time_1 khong hop le"
+menu_9_2f: .asciiz "Chuoi Time_2 khong hop le"
+menu_9_3f: .asciiz "Chuoi Time_1 va Time_2 khong hop le"
+menu_9_newline: .asciiz "\r\n"
 menu_9_1: .asciiz "1. "
 menu_9_2A: .asciiz "2A. "
 menu_9_2B: .asciiz "2B. "
@@ -146,10 +151,12 @@ main:
 # void Menu()
 Menu:
 	# push stack
-	subu $sp, $sp, 12
+	subu $sp, $sp, 20
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
 	sw $t0, 8($sp)
+	sw $t1, 12($sp)
+	sw $t2, 16($sp)
 	
 	
 	# in menu
@@ -173,6 +180,8 @@ Menu_Loop:
 	syscall
 	sw $v0, selection
 	
+	beq $v0, 9, Menu_9
+	
 	lw $a0, selection
 	jal Nhap
 	
@@ -188,7 +197,6 @@ Menu_Loop:
 	beq $s0, 6, Menu_6
 	beq $s0, 7, Menu_7
 	beq $s0, 8, Menu_8
-	beq $s0, 9, Menu_9
 Menu_1:
 	la $a0, menu_result
 	li $v0, 4
@@ -286,14 +294,14 @@ Menu_5:
 	li $v0, 4
 	syscall
 	
-	la $a0, menu_4_1
+	la $a0, menu_5_1
 	li $v0, 4
 	syscall
 	
 	la $a0, TIME_1
 	syscall
 	
-	la $a0, menu_5_1
+	la $a0, menu_5_2
 	syscall
 	
 	lw $a0, d1
@@ -305,7 +313,7 @@ Menu_5:
 	li $v0, 1
 	syscall
 	
-	la $a0, menu_5_2
+	la $a0, menu_5_3
 	li $v0, 4
 	syscall
 	j Menu_Exit
@@ -327,6 +335,18 @@ Menu_6:
 	lw $a0, y1
 	li $v0, 0
 	jal CanChi
+	
+	la $a0, ($v0)
+	li $v0, 4
+	syscall
+	
+	la $a0, _space
+	li $v0, 4
+	syscall
+	
+	la $a0, ($v1)
+	li $v0, 4
+	syscall
 	
 	j Menu_Exit
 	
@@ -387,6 +407,7 @@ Menu_8:
 	la $a0, TIME_1
 	jal Find_Leap
 	move $a0, $v1
+	move $s0, $v0
 	li $v0, 1
 	syscall
 	
@@ -394,7 +415,7 @@ Menu_8:
 	li $v0, 4
 	syscall
 	
-	move $a0, $v0
+	move $a0, $s0
 	li $v0, 1
 	syscall
 	
@@ -402,12 +423,21 @@ Menu_8:
 	
 	
 Menu_9:
+	# doc file
+	jal Doc_File
+	jal XuLiInput
+	move $t1, $v0
+	move $t2, $v1
+	beqz $t1, Menu_9_1Invalid
+	beqz $t2, Menu_9_2Invalid
+	
+	
 	# cau 1
 	la $a0, menu_9_1
 	jal Ghi_Fout
 	la $a0, TIME_1
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	
 	
@@ -419,7 +449,7 @@ Menu_9:
 	jal Convert
 	la $a0, Type
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	la $a0, menu_9_2B
 	jal Ghi_Fout
@@ -428,7 +458,7 @@ Menu_9:
 	jal Convert
 	la $a0, Type
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	la $a0, menu_9_2C
 	jal Ghi_Fout
@@ -437,7 +467,7 @@ Menu_9:
 	jal Convert
 	la $a0, Type
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	
 	
@@ -463,9 +493,9 @@ Menu_9_3_F:
 	jal Ghi_Fout
 
 Menu_9_3_Continue:
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
-
+	
 
 	# cau 4
 	la $a0, menu_9_4
@@ -484,7 +514,7 @@ Menu_9_3_Continue:
 	jal Ghi_Fout
 	la $a0, ($s0)
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	
 	
@@ -495,7 +525,7 @@ Menu_9_3_Continue:
 	jal Ghi_Fout
 	la $a0, TIME_1
 	jal Ghi_Fout
-	la $a0, menu_4_1
+	la $a0, menu_5_2
 	jal Ghi_Fout
 	
 	lw $a0, d1
@@ -508,9 +538,9 @@ Menu_9_3_Continue:
 	
 	la $a0, buffer_1024
 	jal Ghi_Fout
-	la $a0, menu_5_2
+	la $a0, menu_5_3
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	
 	
@@ -523,9 +553,15 @@ Menu_9_3_Continue:
 	jal Ghi_Fout
 	la $a0, menu_6_1
 	jal Ghi_Fout
-	# ham CanChi phai xuat dia chi
-	# de ghi vao buffer
-	la $a0, newline
+	lw $a0, y1
+	jal CanChi
+	la $a0, ($v0)
+	jal Ghi_Fout
+	la $a0,_space
+	jal Ghi_Fout
+	la $a0, ($v1)
+	jal Ghi_Fout
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	
 	
@@ -550,11 +586,9 @@ Menu_9_3_Continue:
 	jal itos
 	la $a0, buffer_1024
 	jal Ghi_Fout
-	la $a0, _space
-	jal Ghi_Fout
 	la $a0, menu_7_4
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
 	
 	
@@ -583,23 +617,36 @@ Menu_9_3_Continue:
 	jal itos
 	la $a0, buffer_1024
 	jal Ghi_Fout
-	la $a0, newline
+	la $a0, menu_9_newline
 	jal Ghi_Fout
+	j Menu_9_Exit
 	
+Menu_9_1Invalid:
+	beqz $t2, Menu_9_3Invalid
+	la $a0, menu_9_1f
+	jal Ghi_Fout
+	j Menu_9_Exit
+Menu_9_2Invalid:
+	beqz $t1, Menu_9_3Invalid
+	la $a0, menu_9_2f
+	jal Ghi_Fout
+	j Menu_9_Exit
+Menu_9_3Invalid:
+	la $a0, menu_9_3f
+	jal Ghi_Fout
+	j Menu_9_Exit
 	
-	la $a0, fout_buffer
-	li $v0, 4
-	syscall
-	
-	j Menu_Exit
-
+Menu_9_Exit:
+	jal Xuat_File
 
 Menu_Exit:
 	# pop stack
+	lw $t2, 16($sp)
+	lw $t1, 12($sp)
 	lw $t0, 8($sp)
 	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp, 12
+	addu $sp, $sp, 20
 	
 	# ket thuc ham
 	jr $ra
@@ -803,8 +850,10 @@ KiemTra_Input:
 	# check tung ki tu
 KiemTra_Input_loop:
 	lb $s2, ($a0)
+	beq $s2, 32, KiemTra_Input_space
 	blt $s2, 48, Input_Invalid # if ($s2 < '0')
 	bgt $s2, 57, Input_Invalid # if ($s2 > '9')
+KiemTra_Input_space:
 	addi $a0, $a0, 1
 	subi $s6, $s6, 1
 	
@@ -1303,28 +1352,101 @@ Ghi_Fout_loop:
 
 
 # ===== Xu li file input =========
-# void XuLiInput()
+# int[] XuLiInput()
+# return $v0: TIME_1 valid (1) or invalid(0); $v1: TIME_2 valid or invalid
 XuLiInput:
 	# push stack
-	subu $sp, $sp, 16
+	subu $sp, $sp, 32
 	sw $ra, ($sp)
 	sw $s0, 4($sp)
-	sw $t0, 8($sp)
-	sw $t1, 12($sp)
+	sw $s1, 8($sp)
+	sw $s2, 12($sp)
+	sw $t0, 16($sp)
+	sw $t1, 20($sp)
+	sw $t2, 24($sp)
+	sw $t6, 28($sp)
 	
 	la $s0, fin_buffer
 	
-	li $t0, 0
-	li $t1, 0
-XuLiInput_GetDM1:
+	# trich TIME_1
+	la $t0, TIME_1
+	li $t6, 0  # i = 0
+XuLiInput_GetD1_loop:
+	lb $t1, ($s0)
+	sb $t1, ($t0)
+	addu $t0, $t0, 1
+	addu $s0, $s0, 1
+	addi $t6, $t6, 1
+	bne $t6, 10, XuLiInput_GetD1_loop
+	
+	la $a0, TIME_1
+	jal KiemTra_Input
+	beqz $v0, XuLiInput_GetD1_Invalid
+	li $s1, 1
+	
+	li $t1, 47  # '/'
+	la $t0, TIME_1
+	sb $t1, 2($t0)
+	sb $t1, 5($t0)
+	la $a0, TIME_1
+	li $a1, 1
+	jal Time
+	li $a0, 1
+	jal Check
+	beqz $v0, XuLiInput_GetD1_Invalid
+	j XuLiInput_GetD2
 	
 	
+XuLiInput_GetD1_Invalid:
+	li $s1, 0
+	
+XuLiInput_GetD2:
+	addu $s0, $s0, 2  # skip \r\n
+	# trich TIME_2
+	la $t0, TIME_2
+	li $t6, 0  # i = 0
+XuLiInput_GetD2_loop:
+	lb $t1, ($s0)
+	sb $t1, ($t0)
+	addu $t0, $t0, 1
+	addu $s0, $s0, 1
+	addi $t6, $t6, 1
+	bne $t6, 10, XuLiInput_GetD2_loop
+	
+	la $a0, TIME_2
+	jal KiemTra_Input
+	beqz $v0, XuLiInput_GetD2_Invalid
+	li $s2, 1
+	
+	li $t1, 47  # '/'
+	la $t0, TIME_2
+	sb $t1, 2($t0)
+	sb $t1, 5($t0)
+	la $a0, TIME_2
+	li $a1, 2
+	jal Time
+	li $a0, 2
+	jal Check
+	beqz $v0, XuLiInput_GetD2_Invalid
+	j XuLiInput_Exit
+	
+	
+XuLiInput_GetD2_Invalid:
+	li $s2, 0
+	
+XuLiInput_Exit:	
+	move $v0, $s1
+	move $v1, $s2
 	# pop stack
-	lw $t1, 12($sp)
-	lw $t0, 8($sp)
+	lw $t6, 28($sp)
+	lw $t2, 24($sp)
+	lw $t1, 20($sp)
+	lw $t0, 16($sp)
+	sw $s2, 12($sp)
+	sw $s1, 8($sp)
 	lw $s0, 4($sp)
 	lw $ra, ($sp)
-	addu $sp, $sp,16
+	addu $sp, $sp, 32
 	
 	# ket thuc ham
 	jr $ra
@@ -1378,13 +1500,13 @@ Xuat_File:
 	sw $ra, ($sp)
 	
 	# add '\0'
-	la $a0, fout_buffer
-	jal strlen
-	addi $s6, $s6, 1
-	move $s6, $v0
-	add $a0, $a0, $s6
-	addu $s6, $0, '\0'
-	sb $s6, ($a0)
+	#la $a0, fout_buffer
+	#jal strlen
+	#addi $s6, $s6, 1
+	#move $s6, $v0
+	#add $a0, $a0, $s6
+	#addu $s6, $0, '\0'
+	#sb $s6, ($a0)
 	
 	# open output file
 	la $a0, fout
@@ -2215,69 +2337,72 @@ DayFrom1:
 	# Push Stack
 	subu $sp,$sp,28
 	sw $ra,($sp)
-	sw $a0,4($sp)
-	sw $a1,8($sp)
-	sw $a2,12($sp)
-	sw $s0,16($sp)
-	sw $s1,20($sp)
-	sw $t0,24($sp)
+	sw $t0,4($sp)
+	sw $t1,8($sp)
+	sw $t2,12($sp)
+	sw $t3,16($sp)
+	sw $s0,20($sp)
+	sw $s1,24($sp)
+	
+	move $t0,$a0
+	move $t1,$a1
+	move $t2,$a2
 	#Kiem tra dieu kien
-	li $t0,3
-	sub $t0,$a2,$t0
-	bltz $t0,XuLiDK
-	j XuLi
+	li $t3,3
+	sub $t3,$t2,$t3
+	bltz $t3,Dayfrom1_XuLiDK
+	j Dayfrom1_XuLi
 
-
-XuLiDK:
-	sub $a2,$a2,1
+Dayfrom1_XuLiDK:
+	sub $t2,$t2,1
 	add $a1,$a1,12
-	j XuLi
-XuLi:
+	j Dayfrom1_XuLi
+Dayfrom1_XuLi:
 	#+365 * year
 	li $s0,0
-	li $t0,365
-	mult $t0,$a2
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,365
+	mult $t3,$t2
+	mflo $t3
+	add $s0,$s0,$t3
 	#+year/4
-	li $t0,4
-	div $a2,$t0
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,4
+	div $t2,$t3
+	mflo $t3
+	add $s0,$s0,$t3
 	#-year/100
-	li $t0,100
-	div $a2,$t0
-	mflo $t0
-	sub $s0,$s0,$t0
+	li $t3,100
+	div $t2,$t3
+	mflo $t3
+	sub $s0,$s0,$t3
 	#+year/400
-	li $t0,400
-	div $a2,$t0
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,400
+	div $t2,$t3
+	mflo $t3
+	add $s0,$s0,$t3
 	#+ (153 * month - 457)
-	li $t0,153
-	mult $t0,$a1
+	li $t3,153
+	mult $t3,$a1
 	mflo $s1
-	li $t0,457
-	sub $s1,$s1,$t0
-	li $t0,5
-	div $s1,$t0
-	mflo $t0
-	add $s0,$s0,$t0
+	li $t3,457
+	sub $s1,$s1,$t3
+	li $t3,5
+	div $s1,$t3
+	mflo $t3
+	add $s0,$s0,$t3
 	#+day-306
 	add $s0,$s0,$a0
-	li $t0,306
-	sub $s0,$s0,306
+	li $t3,306
+	sub $s0,$s0,307
 	# return ket qua
 	move $v0,$s0
 	# popstack	
 	lw $ra,($sp)
-	lw $a0,4($sp)
-	lw $a1,8($sp)
-	lw $a2,12($sp)
-	lw $s0,16($sp)
-	lw $s1,20($sp)
-	lw $t0,24($sp)
+	lw $t0,4($sp)
+	lw $t1,8($sp)
+	lw $t2,12($sp)
+	lw $t3,16($sp)
+	lw $s0,20($sp)
+	lw $s1,24($sp)
 	addu $sp,$sp,28
 	jr $ra
 #==========================
@@ -2364,12 +2489,14 @@ start_cal:
 #=========== void CanChi($a0: int Year) ========
 CanChi:
 	# push stack
-	subu	$sp,$sp,20
+	subu	$sp,$sp,28
 	sw	$ra,($sp)
 	sw	$t0,4($sp)
 	sw	$t1,8($sp)
 	sw	$s0,12($sp)
 	sw	$s1,16($sp)
+	sw	$s2,20($sp)
+	sw	$s3,24($sp)
 	
 	# Gan gia tri
 	addi 	$s0,$a0,0		# Gan gia tri nam hien tai vao thanh ghi $s0 de tinh toan Can
@@ -2403,29 +2530,35 @@ CanChi:
 	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Can cua nam
 	la	$s0,Can
 	addu	$s0,$s0,$t0	
-	li	$v0,4
-	lw	$a0,0($s0)
-	syscall
+	#li	$v0,4
+	#lw	$a0,0($s0)
+	#syscall
+	lw	$s2,0($s0)
 	
 	# Xuat ra dau cach
-	la	$a0,_space
-	li	$v0,4
-	syscall
+	#la	$a0,_space
+	#li	$v0,4
+	#syscall
 	
 	# Tang diachi vung nho len voi so byte da tinh de xuat ra chuoi Chi cua nam
 	la	$s0,Chi
 	addu	$s0,$s0,$t1	
-	li	$v0,4
-	lw	$a0,0($s0)
-	syscall
+	#li	$v0,4
+	#lw	$a0,0($s0)
+	#syscall
+	lw	$s3,0($s0)
 	
+	move $v0,$s2
+	move $v1,$s3
 	# pop stack
 	lw $ra,($sp)
 	lw $t0,4($sp)
 	lw $t1,8($sp)
 	lw $s0,12($sp)
 	lw $s1,16($sp)
-	addu $sp,$sp,20
+	sw $s2,20($sp)
+	sw $s3,24($sp)
+	addu $sp,$sp,28
 	jr      $ra
 # =======================
 exit:
