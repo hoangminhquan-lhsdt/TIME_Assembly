@@ -883,7 +883,7 @@ KiemTra_Input_Exit:
 # ===== Kiem tra ngay hop le =====
 # int Check($a0: int mode)
 # return $v0: 1 if valid, 0 if invalid
-Check: 
+Check:  # Kiểm tra tính đúng đắn của dữ liệu 32/10/139 6/10/1582
 	# Push Stack
  	subu $sp, $sp, 20
 	sw $ra, ($sp)
@@ -893,21 +893,32 @@ Check:
 	sw $t0, 16($sp)
 
 	# Check Mode
-	li,$t0,1
+	li $t0,1
 	beq $a0,$t0,Check_Load_TIME_1
 	j Check_Load_TIME_2
 Check_Load_TIME_1:
 	lw $s0,d1
 	lw $s1,m1
 	lw $s2,y1
-	j Check_Next
+	j Check_Special
 
 Check_Load_TIME_2:
 	lw $s0,d2
 	lw $s1,m2
 	lw $s2,y2
-	j Check_Next
+	j Check_Special
 
+Check_Special:
+	#Check nam
+	li $t0,1582
+	bne $s2,$t0,CheckNext
+	li $t0,10
+	bne $s1,$t0,CheckNext
+	li $t0,5
+	blt $s0,$t0,CheckNext
+	li $t0,14
+	bgt $s0,$t0,CheckNext
+	j Check_False
 Check_Next:
 	# Check Month <= 0 ?
 	blez $s1,Check_False
@@ -1736,6 +1747,9 @@ LeapYear:
 	div $a0,$t0
 	mfhi $t0
 	bne $t0,$0,LeapYear_Exit
+	# Kiem tra xem co be hon 1582 ?
+	sub $t0,$a0,1582
+	bltz $t0,LeapYear_1582
 	# Kiem tra co chia het cho 100 hay khong ? 
 	li $t0,100
 	div $a0,$t0
@@ -1743,7 +1757,9 @@ LeapYear:
 	beq $t0,$0,Chia400
 	li $s0,1
 	j LeapYear_Exit
-	
+LeapYear_1582:
+	li $s0,1
+	j LeapYear_Exit
 Chia400:
 	# Kiem tra co chia het cho 400 hay khong ? 
 	li $t0,400
@@ -2240,16 +2256,18 @@ Dayfrom1_XuLi:
 	div $t2,$t3
 	mflo $t3
 	add $s0,$s0,$t3
+	#-------------------
 	# -year/100
-	li $t3,100
-	div $t2,$t3
-	mflo $t3
-	sub $s0,$s0,$t3
+	#li $t3,100
+	#div $t2,$t3
+	#mflo $t3
+	#sub $s0,$s0,$t3
 	# +year/400
-	li $t3,400
-	div $t2,$t3
-	mflo $t3
-	add $s0,$s0,$t3
+	#li $t3,400
+	#div $t2,$t3
+	#mflo $t3
+	#add $s0,$s0,$t3
+	#------------------
 	# +(153 * month +8)/5
 	li $t3,153
 	mult $t3,$t1
@@ -2262,12 +2280,35 @@ Dayfrom1_XuLi:
 	# +day-400
 	add $s0,$s0,$t0
 	sub $s0,$s0,400
+	#-------------
+	#Xu li SAU TU 15/10/1582 ( khong ton tai cac ngay 5-14/18/2)
+	li $t3,577737
+	sub $t3,$s0,$t3
+	bgez $t3,Dayfrom1_1582
+	j Dayfrom1_Exit
+Dayfrom1_1582:
+	sub $s0,$s0,10
+	# -year/100
+	sub $t2,$t2,1600
+	bltz $t2,Dayfrom1_Exit
+	li $t3,100
+	div $t2,$t3
+	mflo $t3
+	sub $s0,$s0,$t3
+	# +year/400
+	li $t3,400
+	div $t2,$t3
+	mflo $t3
+	add $s0,$s0,$t3
+	#add $s0,$s0,1
+	j Dayfrom1_Exit
+Dayfrom1_Exit:
 	# return ket qua
 	move $v0,$s0
 	# popstack	
 	lw $ra,($sp)
 	lw $t0,4($sp)
-	lw $t1,8($sp)
+	lw $t1,8($sp) 
 	lw $t2,12($sp)
 	lw $t3,16($sp)
 	lw $s0,20($sp)
@@ -2282,13 +2323,14 @@ Dayfrom1_XuLi:
 # dau thu tuc
 WeekDay:
 	# khai bao stack
-	subi $sp,$sp,16
+	subi $sp,$sp,24
 	# backup thanh ghi
 	sw $ra,($sp)
 	sw $t0,4($sp)
 	sw $t1,8($sp)
 	sw $s0,12($sp)  # bien luu ket qua
-	
+	sw $t2,16($sp)
+	sw $t3,20($sp)
 #than thu tuc
 	li $t0,3
 	bge $a1,$t0,start_cal  # thang>=3
@@ -2307,17 +2349,7 @@ start_cal:
 	li $t0,4
 	div $a2,$t0
 	mflo $t0		
-	add $s0,$s0,$t0 	# s0 = 365*year + year/4 + day
-	
-	li $t0,-100
-	div $a2,$t0
-	mflo $t0		
-	add $s0,$s0,$t0 	# s0 = 365*year + year/4 -yaer/100 + day
-	
-	li $t0,400
-	div $a2,$t0
-	mflo $t0		
-	add $s0,$s0,$t0 	# s0 = 365*year + year/4 -yaer/100 + year/400 + day
+	add $s0,$s0,$t0 	# s0 = 365*year + year/4  + day
 	
 	li $t0,153
 	mult $a1,$t0
@@ -2329,8 +2361,33 @@ start_cal:
 	li $t1,5
 	div $t0,$t1
 	mflo $t0	 # $t0 = (153*month + 8) / 5
-	add $s0,$s0,$t0	 # s0 = 365*year + year/4 -yaer/100 + year/400 + day + (153*month + 8) / 5
+	add $s0,$s0,$t0	 # s0 = 365*year + year/4  + day + (153*month + 8) / 5
 	
+	sub $s0,$s0,400	# s0 = 365*year + year/4  + day + (153*month + 8) / 5 - 400
+	
+	li $t3,577737
+	sub $t3,$s0,$t3
+	bgez $t3,WeekDay_1582 # 1600 1700 1800 1900 2000 =>>>>> 
+	j WeekDay_Exit
+WeekDay_1582:
+	sub $s0,$s0,10
+	# -year/100
+	add $t2,$a2,0
+	sub $t2,$t2,1600  #100 200 300 400 .........1500 : 2 TH 1582 => 1599 | 1600- >>>>
+	bltz $t2,WeekDay_Exit
+	li $t3,100
+	div $t2,$t3
+	mflo $t3
+	sub $s0,$s0,$t3
+	# +year/400
+	li $t3,400
+	div $t2,$t3
+	mflo $t3
+	add $s0,$s0,$t3
+	#add $s0,$s0,1
+	j WeekDay_Exit
+WeekDay_Exit:
+	addi $s0,$s0,6
 	li $t0,7
 	div $s0,$t0
 	mfhi $s0	 # s0= s0 mod 7
@@ -2348,8 +2405,11 @@ start_cal:
 	lw $ra,($sp)
 	lw $t0,4($sp)
 	lw $t1,8($sp)
+	
 	lw $s0,12($sp)
-	addu $sp,$sp,16
+	lw $t2,16($sp)
+	lw $t3,20($sp)
+	addu $sp,$sp,24
 	jr $ra
 #==============================
 
