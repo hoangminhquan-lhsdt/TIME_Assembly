@@ -407,8 +407,7 @@ Menu_8:
 	
 	la $a0, TIME_1
 	jal Find_Leap
-	move $a0, $v1
-	move $s0, $v0
+	move $a0, $v0
 	li $v0, 1
 	syscall
 	
@@ -416,7 +415,7 @@ Menu_8:
 	li $v0, 4
 	syscall
 	
-	move $a0, $s0
+	move $a0, $v1
 	li $v0, 1
 	syscall
 	
@@ -607,14 +606,13 @@ Menu_9_3_Continue:
 	
 	la $a0, TIME_1
 	jal Find_Leap
-	move $t0, $v0
-	move $a0, $v1
+	move $a0, $v0
 	jal itos
 	la $a0, buffer_1024
 	jal Ghi_Fout
 	la $a0, menu_8_3
 	jal Ghi_Fout
-	move $a0, $t0
+	move $a0, $v1
 	jal itos
 	la $a0, buffer_1024
 	jal Ghi_Fout
