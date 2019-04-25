@@ -75,7 +75,7 @@ Chi12: .asciiz "Hoi"
 Can: .word Can1,Can2,Can3,Can4,Can5,Can6,Can7,Can8,Can9,Can10
 Chi: .word Chi1,Chi2,Chi3,Chi4,Chi5,Chi6,Chi7,Chi8,Chi9,Chi10,Chi11,Chi12
 
- # bang tra thu trong tuan
+# bang tra thu trong tuan
 sun:	.asciiz "chu nhat"
 mon:	.asciiz "thu hai"
 tue:	.asciiz "thu ba"
@@ -375,7 +375,7 @@ Menu_7:
 	
 	la $a0, TIME_1
 	la $a1, TIME_2
-	jal Distance2day
+	jal DateDiff
 	
 	move $a0, $v0
 	li $v0, 1
@@ -582,7 +582,7 @@ Menu_9_3_Continue:
 	
 	la $a0, TIME_1
 	la $a1, TIME_2
-	jal Distance2day
+	jal DateDiff
 	move $a0, $v0
 	jal itos
 	la $a0, buffer_1024
@@ -883,7 +883,7 @@ KiemTra_Input_Exit:
 # ===== Kiem tra ngay hop le =====
 # int Check($a0: int mode)
 # return $v0: 1 if valid, 0 if invalid
-Check:  # Kiểm tra tính đúng đắn của dữ liệu 32/10/139 6/10/1582
+Check:  
 	# Push Stack
  	subu $sp, $sp, 20
 	sw $ra, ($sp)
@@ -911,13 +911,13 @@ Check_Load_TIME_2:
 Check_Special:
 	#Check nam
 	li $t0,1582
-	bne $s2,$t0,CheckNext
+	bne $s2,$t0,Check_Next
 	li $t0,10
-	bne $s1,$t0,CheckNext
+	bne $s1,$t0,Check_Next
 	li $t0,5
-	blt $s0,$t0,CheckNext
+	blt $s0,$t0,Check_Next
 	li $t0,14
-	bgt $s0,$t0,CheckNext
+	bgt $s0,$t0,Check_Next
 	j Check_False
 Check_Next:
 	# Check Month <= 0 ?
@@ -1539,7 +1539,7 @@ Xuat_File:
 
 
 # ==== Ham chuyen doi TIME =======
-# void Convert($a0: string, $a1: char mode)
+# void Convert($a0: string, $a1: char type)
 Convert:
 	# push stack
 	subu $sp, $sp, 32
@@ -2032,10 +2032,6 @@ Date_i_equals_4:
 	addu $sp, $sp, 4
 	sb $s0, 9($a3)
 	
-	# add '\0'
-	addu $s0, $0, '\0'
-	sb $s0, 10($a3)
-	
 	# pop stack
 	lw $s6, 12($sp)
 	lw $s1, 8($sp)
@@ -2049,8 +2045,8 @@ Date_i_equals_4:
 
 
 # Khoang cach giua 2 ngay TIME_1 va TIME_2
-# int Distance2day($a0: str TIME_1,$a1 str TIME_2
-Distance2day:
+# int DateDiff($a0: str TIME_1,$a1 str TIME_2
+DateDiff:
 	# Push Stack
 	subu $sp,$sp,28
 	sw $ra,($sp)
@@ -2086,12 +2082,12 @@ Distance2day:
 	move $s1,$v0
 	# Distance from Time_1 to Time_2
 	sub $t0,$s0,$s1
-	bltz $t0,Distance2day_Am  # Minus
-	j Distance2day_Exit
-Distance2day_Am:
+	bltz $t0,DateDiff_Am  # Minus
+	j DateDiff_Exit
+DateDiff_Am:
 	sub $t0,$0,$t0
-	j Distance2day_Exit
-Distance2day_Exit:
+	j DateDiff_Exit
+DateDiff_Exit:
 	move $v0,$t0
 	# Pop Stack
 	lw $ra,($sp)
@@ -2107,7 +2103,7 @@ Distance2day_Exit:
 
 
 #====== Ham tim nam nhuan gan nhat nam duoc chon ======
-# int Find_Leap($a0:char)
+# int Find_Leap($a0: string)
 # return $v0: Year1 < Selected Year, $v1: Year2 > Selected Year
 Find_Leap:
 	subu $sp,$sp,16
