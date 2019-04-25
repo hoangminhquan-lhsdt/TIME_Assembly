@@ -2104,46 +2104,107 @@ DateDiff_Exit:
 
 #====== Ham tim nam nhuan gan nhat nam duoc chon ======
 # int Find_Leap($a0: string)
-# return $v0: Year1 < Selected Year, $v1: Year2 > Selected Year
+# return  v1 > v0
 Find_Leap:
-	subu $sp,$sp,16
+	subu $sp,$sp,32
 	sw $ra,($sp)	
 	sw $a0,4($sp)
 	sw $t1,8($sp)
 	sw $t2,12($sp)
-	
+	sw $t3,16($sp)
+	sw $t4,20($sp)
+	sw $t5,24($sp)
+	sw $t6,28($sp)
 	la $a1,TempYear
 	jal Convert_Year_Int
 	move $a0,$v0
 	sw $a0,4($sp)
 	# Run For Year 1
-	li $t1,1
-Loop:
+
+Findt2:
 	subi $a0,$a0,1
-	ble $a0,0,Left_Out
 	jal LeapYear
-	beq $v0,1,Loop2
-	j Loop
-Loop2:
+	beq $v0,1,Con1
+	j Findt2
+Con1:
 	move $t2,$a0
+Findt1:
+	subi $a0,$a0,1
+	jal LeapYear
+	beq $v0,1,Con2
+	j Findt1
+Con2:
+	move $t1,$a0
 	lw $a0,4($sp)
-	li $t1,1
-Loop2_1:
+Findt3:
 	addi $a0,$a0,1
 	jal LeapYear
-	beq $v0,1,ExitLeap
-	j Loop2_1
-Left_Out:
-	li $v0,-1
-	j Loop2
-ExitLeap:
+	beq $v0,1,Con3
+	j Findt3
+Con3:
+	move $t3,$a0
+Findt4:
+	addi $a0,$a0,1
+	jal LeapYear
+	beq $v0,1,Con4
+	j Findt4
+Con4:
+	move $t4,$a0
+	lw $a0,4($sp)
+	jal LeapYear
+	beq $v0,1,Final1
+
+	sub $a1,$a0,$t2
+	sub $a2,$t3,$a0
+	sub $a3,$t4,$a0
+	sub $a0,$a0,$t1
+
+	beq $a1,$a2,Save1
+	blt $a1,$a2,A12
+	j A21
+Save1:
+	move $v0,$t2
+	move $v1,$t3
+	j Exit
+A12:
+	move $v0,$t2
+	blt $a0,$a2,Save12
+	move $v1,$t3
+	j Exit
+Save12:
+	move $v1,$t1
+	j Exit
+A21:
+	move $v0,$t3
+	ble $a3,$a1,Save21
 	move $v1,$t2
-	move $v0,$a0
+	j Exit
+Save21:
+	move $v1,$t4
+	j Exit
+Exit:
+	bgt $v0,$v1,Change
+	j Final
+Change:
+	move $t1,$v0
+	move $t2,$v1
+	move $v0,$t2
+	move $v1,$t1
+	j Final
+Final1:
+	move $v0,$t2
+	move $v1,$t3
+	j Final
+Final:
 	lw $ra,($sp)	
 	lw $a0,4($sp)
 	lw $t1,8($sp)
 	lw $t2,12($sp)
-	addu $sp,$sp,16
+	lw $t3,16($sp)
+	lw $t4,20($sp)
+	lw $t5,24($sp)
+	lw $t6,28($sp)
+	addu $sp,$sp,32
 	jr $ra
 #==============================================
 
